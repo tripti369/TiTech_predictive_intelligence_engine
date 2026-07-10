@@ -1,0 +1,58 @@
+### OS and editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.vscode-shared/
+
+### Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+### Jupyter
+.ipynb_checkpoints
+
+### Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### Caches and local tools
+.cache/
+.pnpm-store/
+.local/
+.codex/
+.copilot/
+.cagent/
+
+### OneDrive and user folders (avoid adding whole user directory)
+OneDrive/
+AppData/
+Documents/
+Downloads/
+Pictures/
+Music/
+Videos/
+
+### Secrets and configs
+.env
+*.pem
+*.key
+
+### Large artifacts
+*.wasm
+*.zip
+*.tar.gz
+
+### Data (enable if you want datasets tracked)
+# data/
+# data/cleaned/
