@@ -1,5 +1,7 @@
 # TiTech Predictive Intelligence Engine
 
+deployed link - https://titech-predictive-intelligence-engine.netlify.app/prototype.html
+
 ## **Team Name:** TiTech
 
 ## **Team Leader:** Tripti Tiwari
