@@ -89,5 +89,5 @@ Built using **React.js, Tailwind CSS, FastAPI, and modern AI/ML technologies**, 
 * **Model Files:** Backend Storage
 
 ## * Prototype Link - https://titech-predictive-intelligence-engine.netlify.app/prototype.html
-## * Presentation (PPT) Link - https://drive.google.com/file/d/1V4zwSZ49gCk2PZCsUXzp6449mPWKXuIC/view?usp=sharing
-## * Video Demo link - https://drive.google.com/file/d/1V4zwSZ49gCk2PZCsUXzp6449mPWKXuIC/view?usp=sharing
+## * Presentation (PPT) Link - https://drive.google.com/file/d/187IOIEkDbreXo2uBsT9iVniawOUMofyn/view?usp=sharing
+## * Video Demo link - https://drive.google.com/file/d/187IOIEkDbreXo2uBsT9iVniawOUMofyn/view?usp=sharing
