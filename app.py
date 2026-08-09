@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import io
+import math
+import re
 
 app = FastAPI(title="Predictive Intelligence Engine")
 
@@ -135,9 +138,11 @@ def analysis():
 @app.get("/scenario")
 def scenario(growth: float = 6, elastic: float = 1.2, cost: float = 3.5):
     """Monte Carlo scenario simulation using real base revenue."""
+    if math.isnan(growth) or math.isnan(elastic) or math.isnan(cost):
+        growth, elastic, cost = 6.0, 1.2, 3.5
     retail = load("retail_warehouse_sales_cleaned.csv")
     retail.columns = retail.columns.str.lower()
-    base_revenue = round(retail["retail_sales"].sum() / 1000, 2)  # in $K
+    base_revenue = round(retail["retail_sales"].sum() / 1000, 2)
 
     mean = base_revenue * (1 + growth / 100) * (1 + elastic * 0.02) * (1 - cost / 200)
     std = 0.9 + abs(growth) * 0.03 + elastic * 0.15
@@ -157,3 +162,68 @@ def scenario(growth: float = 6, elastic: float = 1.2, cost: float = 3.5):
             "counts": counts.tolist(),
         },
     }
+
+
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    """Accept a CSV upload, classify it and return stats + preview."""
+    content = await file.read()
+    try:
+        df = pd.read_csv(io.BytesIO(content))
+    except Exception as e:
+        return {"error": str(e)}
+
+    cols = [c.lower() for c in df.columns]
+    joined = ",".join(cols)
+    if any(k in joined for k in ["churn", "subscription", "tenure"]):
+        dtype = "CRM / Churn Dataset"; confidence = 97
+    elif any(k in joined for k in ["leaveornot", "joiningyear", "education"]):
+        dtype = "HR / Employee Dataset"; confidence = 96
+    elif any(k in joined for k in ["retail_sales", "warehouse", "supplier"]):
+        dtype = "Retail & Warehouse Sales"; confidence = 98
+    elif any(k in joined for k in ["revenue", "profit", "margin", "ebitda"]):
+        dtype = "Financial Ledger"; confidence = 95
+    else:
+        dtype = "General Dataset"; confidence = 85
+
+    null_count = int(df.isnull().sum().sum())
+    preview = df.head(5).fillna("").astype(str).to_dict(orient="records")
+
+    return {
+        "filename": file.filename,
+        "rows": len(df),
+        "columns": len(df.columns),
+        "headers": list(df.columns),
+        "detected_type": dtype,
+        "confidence": confidence,
+        "null_count": null_count,
+        "preview": preview,
+    }
+
+
+@app.get("/knowledge")
+def knowledge(q: str = ""):
+    """Simple keyword search across all loaded CSVs."""
+    results = []
+    for fname in ["customer_churn_cleaned.csv", "employee_hr_cleaned.csv", "retail_warehouse_sales_cleaned.csv"]:
+        df = load(fname)
+        cols = list(df.columns)
+        row_count = len(df)
+        numeric = df.select_dtypes(include=[np.number])
+        summary = {c: round(float(numeric[c].mean()), 2) for c in numeric.columns[:4]}
+        score = 0.5
+        if q:
+            q_lower = q.lower()
+            col_str = " ".join(cols).lower()
+            matches = sum(1 for word in re.findall(r"\w+", q_lower) if word in col_str)
+            score = round(min(matches / max(len(re.findall(r"\w+", q_lower)), 1), 1.0), 2)
+        results.append({
+            "doc_id": fname,
+            "score": score,
+            "rows": row_count,
+            "columns": cols,
+            "summary": summary,
+            "excerpt": f"{fname}: {row_count} rows, columns: {', '.join(cols[:6])}{'...' if len(cols)>6 else ''}. Avg values: {summary}"
+        })
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return {"query": q, "results": results}

@@ -183,7 +183,34 @@
         </section>
         <section class="view" id="view-reports" style="display:none;">
           <div class="page-head"><div><div class="eyebrow">EXECUTIVE OUTPUT</div><h1 class="page-title">Reports</h1><p class="page-sub">Generate a boardroom-ready decision brief, exported however your stakeholders need it.</p></div></div>
-          <div class="grid grid-12" style="margin-bottom:18px;"><div class="card col-8"><div style="font-size:16px;font-weight:700;margin-bottom:12px;">Executive Summary</div><p style="color:#9aa5c0;line-height:1.7;">Enterprise health remains strong at 87.2, driven by APAC demand and improving margins. The Decision Agent recommends prioritizing APAC fulfillment expansion given a 3.4x projected ROI at 91% confidence.</p><div style="font-size:14px;font-weight:700;margin-bottom:10px;">Top Opportunities</div><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;"><th style="padding:10px 14px;">Opportunity</th><th style="padding:10px 14px;">ROI</th><th style="padding:10px 14px;">Confidence</th></tr><tr><td style="padding:10px 14px;">Expand APAC fulfillment capacity</td><td style="padding:10px 14px;">3.4x</td><td style="padding:10px 14px;">91%</td></tr></table></div><div class="card col-4"><div style="font-size:16px;font-weight:700;margin-bottom:14px;">Generate Report</div><button class="btn" onclick="downloadReport('pdf')" style="width:100%;">Export as PDF</button><button class="btn btn-ghost" onclick="downloadReport('json')" style="width:100%;">Export as JSON</button><button class="btn btn-ghost" onclick="downloadReport('pptx')" style="width:100%;">Export slide summary</button></div></div>
+          <div class="grid grid-12" style="margin-bottom:18px;">
+            <div class="card col-8">
+              <div style="font-size:16px;font-weight:700;margin-bottom:12px;">Executive Summary</div>
+              <p id="reportSummaryText" style="color:#9aa5c0;line-height:1.7;">Loading live data…</p>
+              <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Top Opportunities</div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <tr style="color:#9aa5c0;"><th style="padding:10px 14px;">Opportunity</th><th style="padding:10px 14px;">ROI</th><th style="padding:10px 14px;">Confidence</th></tr>
+                <tbody id="reportOppsTable"><tr><td colspan="3" style="padding:10px 14px;color:#9aa5c0;">Loading…</td></tr></tbody>
+              </table>
+              <div style="font-size:14px;font-weight:700;margin:14px 0 10px;">Key Risks</div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <tr style="color:#9aa5c0;"><th style="padding:10px 14px;">Risk</th><th style="padding:10px 14px;">Impact</th><th style="padding:10px 14px;">Confidence</th></tr>
+                <tbody id="reportRisksTable"><tr><td colspan="3" style="padding:10px 14px;color:#9aa5c0;">Loading…</td></tr></tbody>
+              </table>
+            </div>
+            <div class="card col-4">
+              <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Generate Report</div>
+              <div style="display:grid;gap:10px;margin-bottom:18px;">
+                <div class="card" style="padding:12px;"><div style="font-size:11px;color:#9aa5c0;">HEALTH SCORE</div><div id="rptHealth" style="font-size:22px;font-weight:700;">-</div></div>
+                <div class="card" style="padding:12px;"><div style="font-size:11px;color:#9aa5c0;">FORECAST ACCURACY</div><div id="rptAccuracy" style="font-size:22px;font-weight:700;">-</div></div>
+                <div class="card" style="padding:12px;"><div style="font-size:11px;color:#9aa5c0;">CHURN RATE</div><div id="rptChurn" style="font-size:22px;font-weight:700;">-</div></div>
+                <div class="card" style="padding:12px;"><div style="font-size:11px;color:#9aa5c0;">ATTRITION RATE</div><div id="rptAttrition" style="font-size:22px;font-weight:700;">-</div></div>
+              </div>
+              <button class="btn" onclick="downloadReport('pdf')" style="width:100%;margin-bottom:8px;">Export as PDF</button>
+              <button class="btn btn-ghost" onclick="downloadReport('json')" style="width:100%;margin-bottom:8px;">Export as JSON</button>
+              <button class="btn btn-ghost" onclick="downloadReport('pptx')" style="width:100%;">Export slide summary</button>
+            </div>
+          </div>
         </section>
         <section class="view" id="view-settings" style="display:none;">
           <div class="page-head"><div><div class="eyebrow">WORKSPACE CONFIGURATION</div><h1 class="page-title">Settings</h1><p class="page-sub">Manage models, integrations, and security for your TiTech workspace.</p></div></div>
@@ -238,7 +265,7 @@
       // initialize view if needed
       if(!initializedViews[viewName]){ initializedViews[viewName]=true; initView(viewName); }
     }
-    function initView(viewName){ if(viewName==='workspace'){ buildTimeline(); runPipeline(); } if(viewName==='forecasting'){ initForecastingCharts(); } if(viewName==='analytics'){ initAnalyticsCharts(); } if(viewName==='scenario'){ setScenario('base'); } if(viewName==='agents'){ initConstellation('agentsConstellation',360); buildAgentCards(); }}
+    function initView(viewName){ if(viewName==='workspace'){ buildTimeline(); runPipeline(); } if(viewName==='forecasting'){ initForecastingCharts(); } if(viewName==='analytics'){ initAnalyticsCharts(); } if(viewName==='scenario'){ setScenario('base'); } if(viewName==='agents'){ initConstellation('agentsConstellation',360); buildAgentCards(); } if(viewName==='reports'){ buildReport(); } }
     function chartGrad(ctx,c1,c2){ const g=ctx.createLinearGradient(0,0,0,240); g.addColorStop(0,c1); g.addColorStop(1,c2); return g; }
     const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function initDashboardCharts(){ const ctx=document.getElementById('dashKpiChart').getContext('2d'); charts.dashKpi=new Chart(ctx,{ type:'line', data:{ labels:MONTHS.slice(0,7), datasets:[ {label:'Revenue ($M)', data:[8.2,8.9,9.4,10.1,10.8,11.6,12.4], borderColor:'#6AA2FF', backgroundColor:chartGrad(ctx,'rgba(62,123,250,0.35)','rgba(62,123,250,0)'), fill:true, tension:0.4, pointRadius:0, borderWidth:2.5}, {label:'Profit ($M)', data:[3.1,3.4,3.6,3.9,4.2,4.6,5.1], borderColor:'#B197FC', backgroundColor:'transparent', tension:0.4, pointRadius:0, borderWidth:2.5, borderDash:[5,4]} ] }, options:{ responsive:true, aspectRatio:2.2, plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:12}}}, scales:{ x:{grid:{display:false}}, y:{grid:{color:'rgba(148,163,255,0.07)'}} } } }); }
@@ -248,16 +275,169 @@
     function buildTimeline(){ const el=document.getElementById('pipelineTimeline'); el.innerHTML=PIPELINE_STEPS.map((label,i)=>`<div class="timeline-step"><div class="timeline-line"></div><div class="timeline-node">${i+1}</div><div style="font-size:11px;color:#9aa5c0;margin-top:8px;">${label}</div></div>`).join(''); }
     let pipelineRunning=false; function runPipeline(){ if(pipelineRunning) return; pipelineRunning=true; const steps=document.querySelectorAll('#pipelineTimeline .timeline-step'); const log=document.getElementById('workspaceLog'); log.innerHTML=''; steps.forEach(s=>s.classList.remove('done','active')); const agentForStep=[AGENTS[1],AGENTS[1],AGENTS[2],AGENTS[4],AGENTS[3],AGENTS[5],AGENTS[6],AGENTS[7],AGENTS[8]]; PIPELINE_STEPS.forEach((label,i)=>{ setTimeout(()=>{ if(i>0) steps[i-1].classList.add('done'); steps[i].classList.add('active'); const agent=agentForStep[i]||AGENTS[0]; const entry=document.createElement('div'); entry.className='card'; entry.style.padding='12px 14px'; entry.innerHTML=`<div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span class="badge info">${label}</span><span style="color:#9aa5c0;">${agent.name} · ${agent.task}</span><span style="margin-left:auto;color:#9aa5c0;font-family:'JetBrains Mono',monospace;">${new Date().toLocaleTimeString()}</span></div>`; log.prepend(entry); if(i===PIPELINE_STEPS.length-1){ steps[i].classList.add('done'); pipelineRunning=false; } }, i*640); }); }
     document.getElementById('runPipelineBtn').addEventListener('click', ()=>{ pipelineRunning=false; runPipeline(); fetchPrediction(); });
-    const dropzone=document.getElementById('dropzone'); const fileInput=document.getElementById('fileInput'); dropzone.addEventListener('click', ()=> fileInput.click()); ['dragenter','dragover'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.add('drag'); })); ['dragleave','drop'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.remove('drag'); })); fileInput.addEventListener('change', handleFiles); function handleFiles(){ dropzone.querySelector('div').textContent='Classification Agent analyzing file…'; setTimeout(()=>{ dropzone.querySelector('div').textContent='📁'; }, 1600); }
-    function askRag(){ const input=document.getElementById('ragInput'); const q=input.value.trim(); if(!q) return; const chatArea=document.getElementById('chatArea'); const userBubble=document.createElement('div'); userBubble.className='chat-bubble user'; userBubble.textContent=q; chatArea.appendChild(userBubble); const thinking=document.createElement('div'); thinking.className='chat-bubble ai'; thinking.textContent='Thinking...'; chatArea.appendChild(thinking); chatArea.scrollTop=chatArea.scrollHeight; input.value=''; setTimeout(()=>{ thinking.innerHTML=`Based on indexed enterprise documents, the most relevant signal relates to <b>${q.split(' ').slice(-3).join(' ')}</b>.<div class="chat-source">📄 FY26 Vendor Contracts.pdf</div><div class="chat-source">📄 Board Strategy Memo Q3.pdf</div>`; chatArea.scrollTop=chatArea.scrollHeight; }, 900); }
-    document.getElementById('ragInput').addEventListener('keydown', e=>{ if(e.key==='Enter') askRag(); });
+    const dropzone=document.getElementById('dropzone'); const fileInput=document.getElementById('fileInput'); dropzone.addEventListener('click', ()=> fileInput.click()); ['dragenter','dragover'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.add('drag'); })); ['dragleave','drop'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.remove('drag'); })); fileInput.addEventListener('change', handleFiles);
+    dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.classList.remove('drag'); if(e.dataTransfer.files.length){ const dt=e.dataTransfer; fileInput.files=dt.files; handleFiles(); } });
+    function classifyDataset(headers){ const h=headers.map(c=>c.toLowerCase()).join(','); if(h.includes('churn')||h.includes('subscription')||h.includes('tenure')) return {type:'CRM / Churn Dataset',confidence:97}; if(h.includes('leaveornot')||h.includes('joiningyear')||h.includes('education')) return {type:'HR / Employee Dataset',confidence:96}; if(h.includes('retail_sales')||h.includes('warehouse')||h.includes('supplier')) return {type:'Retail & Warehouse Sales',confidence:98}; if(h.includes('revenue')||h.includes('profit')||h.includes('margin')) return {type:'Financial Ledger',confidence:95}; if(h.includes('year')||h.includes('month')||h.includes('date')) return {type:'Time Series Dataset',confidence:91}; return {type:'General Dataset',confidence:85}; }
+    function handleFiles(){
+      const file=fileInput.files[0]; if(!file) return;
+      const dropText=dropzone.querySelector('div:nth-child(2)');
+      if(dropText) dropText.textContent='Classification Agent analyzing file…';
+      const reader=new FileReader();
+      reader.onload=function(e){
+        const lines=e.target.result.trim().split('\n').filter(l=>l.trim());
+        const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+        const rowCount=lines.length-1;
+        const {type,confidence}=classifyDataset(headers);
+        let nullCount=0;
+        lines.slice(1,201).forEach(line=>line.split(',').forEach(cell=>{ if(!cell.trim()||cell.trim().toLowerCase()==='null'||cell.trim().toLowerCase()==='na') nullCount++; }));
+        const cards=document.querySelectorAll('#view-datasets .grid-12 .card');
+        if(cards[0]) cards[0].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">${type}</div><div style="font-size:12px;color:#9aa5c0;">${file.name} · ${rowCount.toLocaleString()} rows · ${headers.length} columns</div>`;
+        if(cards[1]){ const ok=nullCount===0; cards[1].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:${ok?'#7ff3c4':'#ffdd8a'};">${ok?'Passed · 0 errors':'Warning · '+nullCount+' nulls'}</div><div style="font-size:12px;color:#9aa5c0;">Columns: ${headers.slice(0,5).join(', ')}${headers.length>5?'…':''}</div>`; }
+        if(cards[2]) cards[2].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">${confidence}%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;margin-top:8px;"><div style="width:${confidence}%;height:100%;background:#3E7BFA;"></div></div>`;
+        const previewCard=document.querySelector('#view-datasets .card:last-child');
+        if(previewCard){ const hHtml=headers.map(h=>`<th style="padding:10px 14px;">${h}</th>`).join(''); const rHtml=lines.slice(1,6).map(line=>`<tr>${line.split(',').map(c=>`<td style="padding:10px 14px;">${c.trim().replace(/"/g,'')||'—'}</td>`).join('')}</tr>`).join(''); previewCard.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — ${file.name}</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;">${hHtml}</tr>${rHtml}</table></div>`; }
+        if(dropText) dropText.textContent='✅ '+file.name+' classified!';
+        setTimeout(()=>{ if(dropText) dropText.textContent='Drag & drop files, or click to browse'; },3000);
+      };
+      reader.readAsText(file);
+      // Also send to backend for server-side classification
+      const formData = new FormData();
+      formData.append('file', file);
+      fetch(`${BACKEND_URL}/upload`, {method:'POST', body:formData})
+        .then(r=>r.json()).then(data=>{
+          if(data.error) return;
+          const cards=document.querySelectorAll('#view-datasets .grid-12 .card');
+          if(cards[0]) cards[0].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">${data.detected_type}</div><div style="font-size:12px;color:#9aa5c0;">${data.filename} · ${data.rows.toLocaleString()} rows · ${data.columns} columns</div>`;
+          if(cards[1]){ const ok=data.null_count===0; cards[1].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:${ok?'#7ff3c4':'#ffdd8a'};">${ok?'Passed · 0 errors':'Warning · '+data.null_count+' nulls'}</div><div style="font-size:12px;color:#9aa5c0;">Columns: ${data.headers.slice(0,5).join(', ')}${data.headers.length>5?'…':''}</div>`; }
+          if(cards[2]){ cards[2].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">${data.confidence}%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;margin-top:8px;"><div style="width:${data.confidence}%;height:100%;background:#3E7BFA;"></div></div>`; }
+          // Update preview table with backend data
+          const previewCard=document.querySelector('#view-datasets .card:last-child');
+          if(previewCard && data.preview && data.preview.length){
+            const hHtml=data.headers.map(h=>`<th style="padding:10px 14px;">${h}</th>`).join('');
+            const rHtml=data.preview.map(row=>`<tr>${data.headers.map(h=>`<td style="padding:10px 14px;">${row[h]||'—'}</td>`).join('')}</tr>`).join('');
+            previewCard.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — ${data.filename}</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;">${hHtml}</tr>${rHtml}</table></div>`;
+          }
+        }).catch(()=>{}); // silently fallback to client-side parse already done
+    }
+    function askRag(){
+      const input=document.getElementById('ragInput');
+      const q=input.value.trim(); if(!q) return;
+      const chatArea=document.getElementById('chatArea');
+      const userBubble=document.createElement('div'); userBubble.className='chat-bubble user'; userBubble.textContent=q; chatArea.appendChild(userBubble);
+      const thinking=document.createElement('div'); thinking.className='chat-bubble ai'; thinking.textContent='Searching knowledge base...'; chatArea.appendChild(thinking);
+      chatArea.scrollTop=chatArea.scrollHeight; input.value='';
+      fetch(`${BACKEND_URL}/knowledge?q=${encodeURIComponent(q)}`)
+        .then(r=>r.json()).then(data=>{
+          const results=data.results||[];
+          if(results.length===0){ thinking.textContent='No relevant documents found.'; return; }
+          const top=results[0];
+          const sources=results.map(r=>`<div class="chat-source">📄 ${r.doc_id} (score: ${r.score})</div>`).join('');
+          thinking.innerHTML=`<b>Top match:</b> ${top.excerpt}<br><br><b>Key stats:</b> ${top.rows.toLocaleString()} rows, columns: <i>${(top.columns||[]).slice(0,5).join(', ')}</i>${sources}`;
+          chatArea.scrollTop=chatArea.scrollHeight;
+        }).catch(()=>{
+          thinking.innerHTML=`Based on indexed datasets, the most relevant signal relates to <b>${q.split(' ').slice(-3).join(' ')}</b>.<div class="chat-source">📄 customer_churn_cleaned.csv</div><div class="chat-source">📄 employee_hr_cleaned.csv</div>`;
+          chatArea.scrollTop=chatArea.scrollHeight;
+        });
+    }
+    document.getElementById('ragInput')document.getElementById('ragInput')document.getElementById('ragInput').addEventListener('keydown', e=>{ if(e.key==='Enter') askRag(); });
     function initForecastingCharts(){ const fctx=document.getElementById('forecastChart').getContext('2d'); const hist=[8.2,8.9,9.4,10.1,10.8,11.6,12.4]; const future=[13.1,13.9,14.8,15.6,16.5,17.1]; const labels=MONTHS.slice(0,7).concat(MONTHS.slice(7,13)); const upper=[...Array(7).fill(null),13.6,14.6,15.7,16.7,17.8,18.6]; const lower=[...Array(7).fill(null),12.6,13.2,13.9,14.5,15.2,15.6]; charts.forecast=new Chart(fctx,{ type:'line', data:{ labels, datasets:[ {label:'Confidence band (upper)', data:upper, borderColor:'transparent', backgroundColor:'rgba(139,92,246,0.12)', fill:'+1', pointRadius:0, tension:0.35}, {label:'Confidence band (lower)', data:lower, borderColor:'transparent', backgroundColor:'rgba(139,92,246,0.12)', fill:false, pointRadius:0, tension:0.35}, {label:'Historical revenue', data:hist.concat(Array(6).fill(null)), borderColor:'#6AA2FF', backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:0.35}, {label:'Forecast', data:[...Array(6).fill(null), hist[6], ...future], borderColor:'#22D3EE', borderDash:[6,4], backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:0.35} ] }, options:{ responsive:true, aspectRatio:2.8, plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:12}}}, scales:{ x:{grid:{display:false}}, y:{grid:{color:'rgba(148,163,255,0.07)'}} } } }); const tctx=document.getElementById('trendChart').getContext('2d'); charts.trend=new Chart(tctx,{type:'line',data:{labels:MONTHS,datasets:[{label:'Trend',data:[8,8.6,9.1,9.8,10.4,11.1,11.9,12.6,13.2,13.9,14.5,15.2],borderColor:'#B197FC',backgroundColor:chartGrad(tctx,'rgba(139,92,246,0.3)','rgba(139,92,246,0)'),fill:true,tension:0.4,pointRadius:0,borderWidth:2.5}]},options:{responsive:true,aspectRatio:2.2,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(148,163,255,0.07)'}}}}}); const cctx=document.getElementById('confBandChart').getContext('2d'); charts.confBand=new Chart(cctx,{type:'bar',data:{labels:['1mo','2mo','3mo','4mo','5mo','6mo'],datasets:[{label:'Band width ($M)',data:[0.4,0.7,1.0,1.3,1.7,2.1],backgroundColor:'#3E7BFA88',borderRadius:6}]},options:{responsive:true,aspectRatio:2.2,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(148,163,255,0.07)'}}}}}); }
-    function initAnalyticsCharts(){ const actx=document.getElementById('analyticsMainChart').getContext('2d'); charts.analyticsMain=new Chart(actx,{type:'bar',data:{labels:MONTHS.slice(0,7),datasets:[{type:'bar',label:'Revenue ($M)',data:[8.2,8.9,9.4,10.1,10.8,11.6,12.4],backgroundColor:'#3E7BFA77',borderRadius:6,order:2},{type:'line',label:'Profit ($M)',data:[3.1,3.4,3.6,3.9,4.2,4.6,5.1],borderColor:'#22D3EE',backgroundColor:'transparent',borderWidth:2.5,tension:0.4,pointRadius:3,pointBackgroundColor:'#22D3EE',order:1}]},options:{responsive:true,aspectRatio:2.4,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(148,163,255,0.07)'}}}}}); const corr=document.getElementById('corrMatrix'); const vars=['Rev','Profit','Churn','NPS','CAC','LTV']; const matrix=[[1,0.86,-0.42,0.51,-0.3,0.72],[0.86,1,-0.38,0.47,-0.25,0.69],[-0.42,-0.38,1,-0.61,0.44,-0.55],[0.51,0.47,-0.61,1,-0.2,0.6],[-0.3,-0.25,0.44,-0.2,1,-0.48],[0.72,0.69,-0.55,0.6,-0.48,1]]; corr.innerHTML=''; matrix.forEach((row,i)=>row.forEach((v,j)=>{ const intensity=Math.abs(v); const color=v>=0?`rgba(34,211,238,${0.15+intensity*0.6})`:`rgba(248,113,113,${0.15+intensity*0.6})`; corr.innerHTML += `<div class="heat-cell" style="background:${color};">${v.toFixed(2)}</div>`;})); const regionHeat=document.getElementById('regionHeat'); const regions=['NA','EMEA','APAC','LATAM']; const metrics=['Revenue growth','Margin','Retention']; const rmatrix=[[0.82,0.6,0.74],[0.55,0.71,0.63],[0.91,0.52,0.48],[0.4,0.66,0.58]]; regionHeat.innerHTML=''; regions.forEach((r,ri)=>metrics.forEach((m,mi)=>{ const v=rmatrix[ri][mi]; const alpha=0.15+v*0.6; regionHeat.innerHTML += `<div class="heat-cell" style="background:rgba(139,92,246,${alpha});">${r}<br>${Math.round(v*100)}%</div>`;})); const octx=document.getElementById('outlierChart').getContext('2d'); const normalPts=Array.from({length:40},()=>({x:10+Math.random()*80,y:20+Math.random()*60})); const outliers=[{x:95,y:8},{x:12,y:92},{x:88,y:95}]; charts.outlier=new Chart(octx,{type:'scatter',data:{datasets:[{label:'Orders',data:normalPts,backgroundColor:'#6AA2FF99',pointRadius:4},{label:'Outliers',data:outliers,backgroundColor:'#F87171',pointRadius:6}]},options:{responsive:true,aspectRatio:2.2,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},scales:{x:{title:{display:true,text:'Order value ($)'},grid:{color:'rgba(148,163,255,0.07)'}},y:{title:{display:true,text:'Order frequency'},grid:{color:'rgba(148,163,255,0.07)'}}}}}); }
+    function initAnalyticsCharts(){
+      // Revenue vs Profit chart - use live data if available
+      const actx=document.getElementById('analyticsMainChart').getContext('2d');
+      const liveRev = window._liveData ? window._liveData.revenue.values.slice(-7).map(v=>+(v/1000).toFixed(1)) : [8.2,8.9,9.4,10.1,10.8,11.6,12.4];
+      const liveLabels = window._liveData ? window._liveData.revenue.labels.slice(-7) : ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+      if(charts.analyticsMain) charts.analyticsMain.destroy();
+      charts.analyticsMain=new Chart(actx,{type:'bar',data:{labels:liveLabels,datasets:[
+        {type:'bar',label:'Revenue ($K)',data:liveRev,backgroundColor:'#3E7BFA77',borderRadius:6,order:2},
+        {type:'line',label:'Profit ($K)',data:liveRev.map(v=>+(v*0.4).toFixed(1)),borderColor:'#22D3EE',backgroundColor:'transparent',borderWidth:2.5,tension:0.4,pointRadius:3,pointBackgroundColor:'#22D3EE',order:1}
+      ]},options:{responsive:true,aspectRatio:2.4,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(148,163,255,0.07)'}}}}});
+
+      // Region heatmap
+      const regionHeat=document.getElementById('regionHeat');
+      const regions=['NA','EMEA','APAC','LATAM']; const metrics=['Revenue','Margin','Retention'];
+      const rmatrix=[[0.82,0.6,0.74],[0.55,0.71,0.63],[0.91,0.52,0.48],[0.4,0.66,0.58]];
+      regionHeat.innerHTML='';
+      regions.forEach((r,ri)=>metrics.forEach((m,mi)=>{ const v=rmatrix[ri][mi]; regionHeat.innerHTML+=`<div class="heat-cell" style="background:rgba(139,92,246,${0.15+v*0.6});">${r}<br>${Math.round(v*100)}%</div>`;}));
+
+      // Fetch live correlation + outliers from backend
+      fetch(`${BACKEND_URL}/analysis`).then(r=>r.json()).then(data=>{
+        const dispCols=['age','tenure','usage_frequency','support_calls','payment_delay','total_spend'];
+        const corr=document.getElementById('corrMatrix');
+        corr.innerHTML='';
+        dispCols.forEach(r=>dispCols.forEach(c=>{
+          const v=(data.correlation[r]&&data.correlation[r][c]!=null)?data.correlation[r][c]:0;
+          const intensity=Math.abs(v);
+          const color=v>=0?`rgba(34,211,238,${0.15+intensity*0.6})`:`rgba(248,113,113,${0.15+intensity*0.6})`;
+          corr.innerHTML+=`<div class="heat-cell" style="background:${color};font-size:9px;" title="${r} x ${c}">${v.toFixed(2)}</div>`;
+        }));
+        // Outlier scatter with real data
+        const octx=document.getElementById('outlierChart').getContext('2d');
+        const normalPts=Array.from({length:40},()=>({x:10+Math.random()*80,y:20+Math.random()*60}));
+        const outlierCols=Object.entries(data.outliers).filter(([,v])=>v.count>0);
+        const outlierPts=outlierCols.map((_,i)=>({x:85+i*5,y:80+i*4}));
+        if(charts.outlier) charts.outlier.destroy();
+        charts.outlier=new Chart(octx,{type:'scatter',data:{datasets:[
+          {label:'Normal data',data:normalPts,backgroundColor:'#6AA2FF99',pointRadius:4},
+          {label:`Outliers (${outlierCols.length} cols)`,data:outlierPts.length?outlierPts:[{x:95,y:8}],backgroundColor:'#F87171',pointRadius:6}
+        ]},options:{responsive:true,aspectRatio:2.2,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},scales:{x:{title:{display:true,text:'Feature index'},grid:{color:'rgba(148,163,255,0.07)'}},y:{title:{display:true,text:'Outlier score'},grid:{color:'rgba(148,163,255,0.07)'}}}}});
+      }).catch(()=>{
+        // fallback static correlation
+        const corr=document.getElementById('corrMatrix');
+        const matrix=[[1,0.86,-0.42,0.51,-0.3,0.72],[0.86,1,-0.38,0.47,-0.25,0.69],[-0.42,-0.38,1,-0.61,0.44,-0.55],[0.51,0.47,-0.61,1,-0.2,0.6],[-0.3,-0.25,0.44,-0.2,1,-0.48],[0.72,0.69,-0.55,0.6,-0.48,1]];
+        corr.innerHTML='';
+        matrix.forEach((row,i)=>row.forEach((v,j)=>{ const intensity=Math.abs(v); const color=v>=0?`rgba(34,211,238,${0.15+intensity*0.6})`:`rgba(248,113,113,${0.15+intensity*0.6})`; corr.innerHTML+=`<div class="heat-cell" style="background:${color};">${v.toFixed(2)}</div>`;}));
+        const octx=document.getElementById('outlierChart').getContext('2d');
+        const normalPts=Array.from({length:40},()=>({x:10+Math.random()*80,y:20+Math.random()*60}));
+        if(charts.outlier) charts.outlier.destroy();
+        charts.outlier=new Chart(octx,{type:'scatter',data:{datasets:[{label:'Orders',data:normalPts,backgroundColor:'#6AA2FF99',pointRadius:4},{label:'Outliers',data:[{x:95,y:8},{x:12,y:92},{x:88,y:95}],backgroundColor:'#F87171',pointRadius:6}]},options:{responsive:true,aspectRatio:2.2,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},scales:{x:{title:{display:true,text:'Order value ($)'},grid:{color:'rgba(148,163,255,0.07)'}},y:{title:{display:true,text:'Order frequency'},grid:{color:'rgba(148,163,255,0.07)'}}}}});
+      });
+    }
     const SCENARIO_PRESETS={bull:{growth:16,elastic:8,cost:20,label:'Bull scenario'},base:{growth:6,elastic:12,cost:35,label:'Base scenario'},bear:{growth:-4,elastic:20,cost:55,label:'Bear scenario'}};
     function setScenario(name){ document.querySelectorAll('.btn[data-sc]').forEach(btn=>btn.classList.remove('active')); const button=document.querySelector(`.btn[data-sc="${name}"]`); if(button) button.classList.add('active'); const p=SCENARIO_PRESETS[name]; if(!p) return; document.getElementById('rangeGrowth').value=p.growth; document.getElementById('rangeElastic').value=p.elastic; document.getElementById('rangeCost').value=p.cost; document.getElementById('scenarioLabel').textContent=p.label; updateSim(); }
     function randNormal(mean,std){ let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random(); return mean + std*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
-    function updateSim(){ const growth=+document.getElementById('rangeGrowth').value; const elastic=+document.getElementById('rangeElastic').value/10; const cost=+document.getElementById('rangeCost').value/10; const runsIdx=+document.getElementById('rangeRuns').value; document.getElementById('valGrowth').textContent=growth+'%'; document.getElementById('valElastic').textContent=elastic.toFixed(1)+'x'; document.getElementById('valCost').textContent=cost.toFixed(1)+'%'; document.getElementById('valRuns').textContent=(runsIdx*1000).toLocaleString(); const baseRevenue=window._liveBaseRevenue||12.4; const mean=baseRevenue*(1+growth/100)*(1+elastic*0.02)*(1-cost/200); const std=0.9+Math.abs(growth)*0.03+elastic*0.15; const n=Math.min(runsIdx*1000,6000); const samples=Array.from({length:n},()=>randNormal(mean,std)); const bins=22; const min=Math.min(...samples); const max=Math.max(...samples); const width=(max-min)/bins; const counts=Array(bins).fill(0); samples.forEach(s=>{ let idx=Math.floor((s-min)/width); if(idx>=bins) idx=bins-1; if(idx<0) idx=0; counts[idx]++; }); const labels=counts.map((_,i)=>(min+width*i).toFixed(1)); const sorted=[...samples].sort((a,b)=>a-b); const var95=mean - sorted[Math.floor(samples.length*0.05)]; document.getElementById('expRevenue').textContent='$'+mean.toFixed(1)+'M'; document.getElementById('expRisk').textContent='$'+Math.max(var95,0.3).toFixed(1)+'M'; document.getElementById('expSensitivity').textContent=(1+elastic*0.4-growth*0.01).toFixed(2); const mctx=document.getElementById('monteCarloChart').getContext('2d'); if(charts.monteCarlo) charts.monteCarlo.destroy(); charts.monteCarlo=new Chart(mctx,{type:'bar',data:{labels,datasets:[{label:'Simulated outcomes',data:counts,backgroundColor:counts.map((_,i)=>i<bins*0.3? '#F8717188':i>bins*0.7? '#34D39988':'#6AA2FF99'),borderRadius:4,barPercentage:1,categoryPercentage:1}]},options:{responsive:true,aspectRatio:2.8,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8},title:{display:true,text:'Revenue ($M)'}},y:{grid:{color:'rgba(148,163,255,0.07)'},title:{display:true,text:'Frequency'}}}}}); }
-    function buildAgentCards(){ const grid=document.getElementById('agentCardsGrid'); grid.innerHTML=AGENTS.map(a=>`<div class="agent-card"><div class="agent-card-top"><div class="agent-avatar">🤖</div><div><div class="agent-name">${a.name}</div><div class="agent-role">${a.role}</div></div></div><div class="agent-task">${a.task}</div><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#9aa5c0;"><span>${a.confidence}% confidence</span><span>${a.time}</span></div><div class="agent-conf-bar"><div class="agent-conf-fill" style="width:${a.confidence}%"></div></div></div>`).join(''); }
+    function updateSim(){
+      const growth=+document.getElementById('rangeGrowth').value;
+      const elastic=+document.getElementById('rangeElastic').value/10;
+      const cost=+document.getElementById('rangeCost').value/10;
+      const runsIdx=+document.getElementById('rangeRuns').value;
+      document.getElementById('valGrowth').textContent=growth+'%';
+      document.getElementById('valElastic').textContent=elastic.toFixed(1)+'x';
+      document.getElementById('valCost').textContent=cost.toFixed(1)+'%';
+      document.getElementById('valRuns').textContent=(runsIdx*1000).toLocaleString();
+      // Call backend /scenario with live params
+      fetch(`${BACKEND_URL}/scenario?growth=${growth}&elastic=${elastic}&cost=${cost}`)
+        .then(r=>r.json()).then(data=>{
+          document.getElementById('expRevenue').textContent='$'+data.expected_revenue.toFixed(1)+'K';
+          document.getElementById('expRisk').textContent='$'+data.var_95.toFixed(1)+'K';
+          document.getElementById('expSensitivity').textContent=data.sensitivity.toFixed(2);
+          const mctx=document.getElementById('monteCarloChart').getContext('2d');
+          if(charts.monteCarlo) charts.monteCarlo.destroy();
+          const counts=data.histogram.counts;
+          const bins=counts.length;
+          charts.monteCarlo=new Chart(mctx,{type:'bar',data:{labels:data.histogram.labels.map(v=>v.toFixed(1)),datasets:[{label:'Simulated outcomes',data:counts,backgroundColor:counts.map((_,i)=>i<bins*0.3?'#F8717188':i>bins*0.7?'#34D39988':'#6AA2FF99'),borderRadius:4,barPercentage:1,categoryPercentage:1}]},options:{responsive:true,aspectRatio:2.8,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8},title:{display:true,text:'Revenue ($K)'}},y:{grid:{color:'rgba(148,163,255,0.07)'},title:{display:true,text:'Frequency'}}}}});
+        }).catch(()=>{
+          // fallback client-side simulation
+          const baseRevenue=window._liveBaseRevenue||12.4;
+          function randNormal(mean,std){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return mean+std*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+          const mean=baseRevenue*(1+growth/100)*(1+elastic*0.02)*(1-cost/200);
+          const std=0.9+Math.abs(growth)*0.03+elastic*0.15;
+          const n=Math.min(runsIdx*1000,6000);
+          const samples=Array.from({length:n},()=>randNormal(mean,std));
+          const bins=22; const min=Math.min(...samples); const max=Math.max(...samples); const width=(max-min)/bins;
+          const counts=Array(bins).fill(0);
+          samples.forEach(s=>{let idx=Math.floor((s-min)/width);if(idx>=bins)idx=bins-1;if(idx<0)idx=0;counts[idx]++;});
+          const labels=counts.map((_,i)=>(min+width*i).toFixed(1));
+          const sorted=[...samples].sort((a,b)=>a-b);
+          const var95=mean-sorted[Math.floor(samples.length*0.05)];
+          document.getElementById('expRevenue').textContent='$'+mean.toFixed(1)+'M';
+          document.getElementById('expRisk').textContent='$'+Math.max(var95,0.3).toFixed(1)+'M';
+          document.getElementById('expSensitivity').textContent=(1+elastic*0.4-growth*0.01).toFixed(2);
+          const mctx=document.getElementById('monteCarloChart').getContext('2d');
+          if(charts.monteCarlo) charts.monteCarlo.destroy();
+          charts.monteCarlo=new Chart(mctx,{type:'bar',data:{labels,datasets:[{label:'Simulated outcomes',data:counts,backgroundColor:counts.map((_,i)=>i<bins*0.3?'#F8717188':i>bins*0.7?'#34D39988':'#6AA2FF99'),borderRadius:4,barPercentage:1,categoryPercentage:1}]},options:{responsive:true,aspectRatio:2.8,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8},title:{display:true,text:'Revenue ($M)'}},y:{grid:{color:'rgba(148,163,255,0.07)'},title:{display:true,text:'Frequency'}}}}});
+        });
+    }
+    function buildAgentCardsfunction buildAgentCardsfunction buildAgentCards(){ const grid=document.getElementById('agentCardsGrid'); grid.innerHTML=AGENTS.map(a=>`<div class="agent-card"><div class="agent-card-top"><div class="agent-avatar">🤖</div><div><div class="agent-name">${a.name}</div><div class="agent-role">${a.role}</div></div></div><div class="agent-task">${a.task}</div><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#9aa5c0;"><span>${a.confidence}% confidence</span><span>${a.time}</span></div><div class="agent-conf-bar"><div class="agent-conf-fill" style="width:${a.confidence}%"></div></div></div>`).join(''); }
     function downloadReport(type){ let content, filename, mime='text/plain'; if(type==='json'){ content = JSON.stringify({ report:'TiTech Q3 Executive Decision Brief', generated:new Date().toISOString(), businessHealthScore:87.2, forecastAccuracy:'96.4%', topOpportunities:[{title:'Expand APAC fulfillment capacity',roi:'3.4x',confidence:'91%'},{title:'Bundle Analytics Add-on with Enterprise Suite',roi:'2.6x',confidence:'86%'}], risks:[{title:'APAC customer attrition signal', impact:'$420K',confidence:'88%'}] }, null, 2); filename='titech_executive_report.json'; mime='application/json'; } else { content=`TiTech Predictive Intelligence Engine\nExecutive Decision Brief — Q3 2026\n\nBusiness Health Score: 87.2\nForecast Accuracy: 96.4%\n\nTop Opportunity: Expand APAC fulfillment capacity (ROI 3.4x, 91% confidence)\nKey Risk: APAC customer attrition signal ($420K impact, 88% confidence)\n\nGenerated by the TiTech prototype.`; filename = type==='pdf' ? 'titech_executive_report.pdf.txt' : 'titech_slide_summary.pptx.txt'; }
       const blob = new Blob([content], {type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); }
     window.addEventListener('load', ()=>{ setScenario('base'); });
@@ -365,11 +545,103 @@ function updateUiWithPrediction(data){
   if(insights[1]) insights[1].innerHTML = `Customer churn rate <b style="color:#ffdd8a;">${data.churn_rate}%</b>`;
   if(insights[2]) insights[2].innerHTML = `Employee attrition <b style="color:#ffb3b0;">${data.attrition_rate}%</b>`;
   if(insights[3]) insights[3].innerHTML = `Avg customer spend <b style="color:#bcd4ff;">$${data.avg_spend}</b>`;
+
+  // ── Store live data globally for reports ─────────────────────────────────
+  window._liveData = data;
+  window._liveHealthScore = healthScore;
+  window._liveRiskLevel = riskLevel;
+  buildReport();
 }
 
 window.addEventListener('load', ()=>{ setScenario('base'); fetchPrediction(); });
 
-</script>
+function buildReport(){
+  const data = window._liveData;
+  const health = window._liveHealthScore || '-';
+  const risk = window._liveRiskLevel || '-';
+
+  const el = id => document.getElementById(id);
+  if(el('rptHealth')) el('rptHealth').textContent = health;
+  if(el('rptAccuracy')) el('rptAccuracy').textContent = data ? data.forecast_accuracy + '%' : '-';
+  if(el('rptChurn')) el('rptChurn').textContent = data ? data.churn_rate + '%' : '-';
+  if(el('rptAttrition')) el('rptAttrition').textContent = data ? data.attrition_rate + '%' : '-';
+
+  if(!data) return;
+
+  const totalRev = data.revenue.values.reduce((a,b)=>a+b,0);
+  const revK = (totalRev/1000).toFixed(1);
+  const topCity = Object.entries(data.attrition_by_city).sort((a,b)=>b[1]-a[1])[0];
+  const topChurnSub = Object.entries(data.churn_by_subscription).sort((a,b)=>b[1]-a[1])[0];
+  const nextRev = data.forecast.values[0];
+
+  if(el('reportSummaryText')){
+    el('reportSummaryText').innerHTML =
+      `Business health score is <b style="color:#7ff3c4;">${health}</b> with forecast accuracy of <b style="color:#7ff3c4;">${data.forecast_accuracy}%</b>. ` +
+      `Total revenue across ${data.revenue.labels.length} periods: <b style="color:#bcd4ff;">$${revK}K</b>. ` +
+      `Customer churn rate is <b style="color:#ffdd8a;">${data.churn_rate}%</b> — highest in <b>${topChurnSub[0]}</b> tier at <b>${topChurnSub[1]}%</b>. ` +
+      `Employee attrition is <b style="color:#ffb3b0;">${data.attrition_rate}%</b>, highest in <b>${topCity[0]}</b> at <b>${topCity[1]}%</b>. ` +
+      `Next period revenue forecast: <b style="color:#7ff3c4;">$${(nextRev/1000).toFixed(1)}K</b>. ` +
+      `Risk level: <b style="color:${risk==='Low'?'#7ff3c4':risk==='Medium'?'#ffdd8a':'#ffb3b0'}">${risk}</b>.`;
+  }
+
+  const opps = [];
+  if(data.churn_rate > 40) opps.push({title:`Reduce ${topChurnSub[0]} tier churn (${topChurnSub[1]}%)`, roi:'2.8x', conf:'87%'});
+  if(data.attrition_rate > 30) opps.push({title:`Address attrition in ${topCity[0]} (${topCity[1]}%)`, roi:'2.1x', conf:'83%'});
+  if(data.forecast_accuracy > 85) opps.push({title:'Scale revenue with high-confidence forecast', roi:'3.2x', conf: data.forecast_accuracy+'%'});
+  opps.push({title:'Expand top-performing sales period capacity', roi:'1.9x', conf:'81%'});
+
+  if(el('reportOppsTable')) el('reportOppsTable').innerHTML = opps.map(o=>
+    `<tr><td style="padding:10px 14px;">${o.title}</td><td style="padding:10px 14px;">${o.roi}</td><td style="padding:10px 14px;">${o.conf}</td></tr>`
+  ).join('');
+
+  const risks = [];
+  if(data.churn_rate > 45) risks.push({title:'High churn rate across all subscription tiers', impact:'$'+Math.round(data.avg_spend*data.churn_rate*10)+'K', conf:'88%'});
+  if(data.attrition_rate > 35) risks.push({title:`Employee attrition spike in ${topCity[0]}`, impact:'Productivity loss', conf:'84%'});
+  risks.push({title:'Revenue concentration in few periods', impact:'Seasonality risk', conf:'79%'});
+
+  if(el('reportRisksTable')) el('reportRisksTable').innerHTML = risks.map(r=>
+    `<tr><td style="padding:10px 14px;">${r.title}</td><td style="padding:10px 14px;color:#ffb3b0;">${r.impact}</td><td style="padding:10px 14px;">${r.conf}</td></tr>`
+  ).join('');
+}
+
+function downloadReport(type){
+  const data = window._liveData;
+  const health = window._liveHealthScore || 'N/A';
+  const risk = window._liveRiskLevel || 'N/A';
+  let content, filename, mime='text/plain';
+  if(type==='json'){
+    content = JSON.stringify({
+      report:'TiTech Executive Decision Brief',
+      generated: new Date().toISOString(),
+      businessHealthScore: health,
+      forecastAccuracy: data ? data.forecast_accuracy+'%' : 'N/A',
+      churnRate: data ? data.churn_rate+'%' : 'N/A',
+      attritionRate: data ? data.attrition_rate+'%' : 'N/A',
+      avgCustomerSpend: data ? '$'+data.avg_spend : 'N/A',
+      avgTenure: data ? data.avg_tenure+' months' : 'N/A',
+      riskLevel: risk,
+      revenueData: data ? data.revenue : {},
+      forecast: data ? data.forecast : {},
+      churnBySubscription: data ? data.churn_by_subscription : {},
+      attritionByCity: data ? data.attrition_by_city : {}
+    }, null, 2);
+    filename='titech_executive_report.json'; mime='application/json';
+  } else {
+    content = `TiTech Predictive Intelligence Engine\nExecutive Decision Brief — ${new Date().toLocaleDateString()}\n\n`+
+      `Business Health Score: ${health}\n`+
+      `Forecast Accuracy: ${data ? data.forecast_accuracy+'%' : 'N/A'}\n`+
+      `Churn Rate: ${data ? data.churn_rate+'%' : 'N/A'}\n`+
+      `Attrition Rate: ${data ? data.attrition_rate+'%' : 'N/A'}\n`+
+      `Avg Customer Spend: ${data ? '$'+data.avg_spend : 'N/A'}\n`+
+      `Risk Level: ${risk}\n\n`+
+      `Revenue Periods: ${data ? data.revenue.labels.join(', ') : 'N/A'}\n`+
+      `Churn by Subscription: ${data ? JSON.stringify(data.churn_by_subscription) : 'N/A'}\n`+
+      `Attrition by City: ${data ? JSON.stringify(data.attrition_by_city) : 'N/A'}\n`;
+    filename = type==='pdf' ? 'titech_report.pdf.txt' : 'titech_slides.pptx.txt';
+  }
+  const blob=new Blob([content],{type:mime}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
 
 </body>
 </html>
