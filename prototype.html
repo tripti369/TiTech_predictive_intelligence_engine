@@ -12,9 +12,9 @@
     * { box-sizing: border-box; }
     body { margin:0; min-height:100vh; background: radial-gradient(circle at top left, rgba(62,123,250,0.18), transparent 35%), radial-gradient(circle at top right, rgba(139,92,246,0.1), transparent 35%), #080b14; }
     button,input,select { font: inherit; }
-    .hidden { display:none; }
+    .hidden { display:none !important; }
     .app-shell { display:none; }
-    .app-shell.active { display:block; }
+    .app-shell.active { display:block !important; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background: rgba(13,18,32,0.9); border-bottom:1px solid rgba(148,163,255,0.08); position:sticky; top:0; z-index:10; }
     .sidebar { width:260px; position:fixed; top:0; left:0; bottom:0; background: rgba(13,18,32,0.95); border-right:1px solid rgba(148,163,255,0.08); padding:24px 16px; display:flex; flex-direction:column; gap:18px; }
     .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; color:#b9c2db; text-decoration:none; cursor:pointer; }
@@ -238,7 +238,24 @@
     const BACKEND_URL = (window.__BACKEND_URL__ || (document.querySelector('meta[name="backend-url"]') && document.querySelector('meta[name="backend-url"]').content) || 'https://predictive-intelligence-engine-sarthi-ai-main-056065f.kuberns.cloud');
     let charts = {};
     let initializedViews = {dashboard:true};
-    document.getElementById('login-form').addEventListener('submit', function(e){ e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); const shell=document.getElementById('app-shell'); shell.classList.add('active'); buildAgentCards(); initDashboardCharts(); initConstellation('dashConstellation',300); initView('dashboard'); });
+    document.getElementById('login-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var loginView = document.getElementById('login-view');
+  var shell = document.getElementById('app-shell');
+  loginView.style.display = 'none';
+  loginView.classList.add('hidden');
+  shell.style.display = 'block';
+  shell.classList.add('active');
+  // show dashboard view explicitly
+  document.querySelectorAll('.view').forEach(function(v){ v.style.display='none'; });
+  var dash = document.getElementById('view-dashboard');
+  if(dash) dash.style.display = 'block';
+  buildAgentCards();
+  initDashboardCharts();
+  initConstellation('dashConstellation', 300);
+  initView('dashboard');
+  fetchPrediction();
+});
     document.querySelectorAll('.nav-item').forEach(item=> item.addEventListener('click', ()=> nav(item.dataset.view)));
     function nav(viewName){
       // hide all views
