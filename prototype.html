@@ -235,7 +235,7 @@
     const PIPELINE_STEPS = ['Upload','Classification','AI Processing','Forecasting','Analytics','Knowledge','Scenario','Validation','Recommendations'];
     const CRUMB_LABELS = {dashboard:'Dashboard',workspace:'AI Workspace',datasets:'Datasets',knowledge:'Knowledge Base',forecasting:'Forecasting',analytics:'Analytics',scenario:'Scenario Simulator',agents:'AI Agents',reports:'Reports',settings:'Settings'};
     // Resolve backend URL from global override or meta tag at deploy time, fallback to localhost
-    const BACKEND_URL = (window.__BACKEND_URL__ || (document.querySelector('meta[name="backend-url"]') && document.querySelector('meta[name="backend-url"]').content) || 'http://127.0.0.1:8000');
+    const BACKEND_URL = (window.__BACKEND_URL__ || (document.querySelector('meta[name="backend-url"]') && document.querySelector('meta[name="backend-url"]').content) || 'https://predictive-intelligence-engine-sarthi-ai-main-056065f.kuberns.cloud');
     let charts = {};
     let initializedViews = {dashboard:true};
     document.getElementById('login-form').addEventListener('submit', function(e){ e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); const shell=document.getElementById('app-shell'); shell.classList.add('active'); buildAgentCards(); initDashboardCharts(); initConstellation('dashConstellation',300); initView('dashboard'); });
