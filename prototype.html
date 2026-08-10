@@ -143,10 +143,19 @@
         <section class="view" id="view-datasets" style="display:none;">
           <div class="page-head"><div><div class="eyebrow">DATA INGESTION</div><h1 class="page-title">Datasets</h1><p class="page-sub">Upload enterprise data or documents — the Classification Agent detects type and validates automatically.</p></div></div>
           <div class="card"><div class="dropzone" id="dropzone"><div style="font-size:22px;">📁</div><div style="font-weight:700;font-size:15px;">Drag & drop files, or click to browse</div><div style="color:#9aa5c0;margin-top:10px;">Automatic dataset classification runs the moment a file lands here</div><div style="display:flex;gap:10px;justify-content:center;margin-top:14px;"><span class="badge">.CSV</span><span class="badge">.XLSX</span><span class="badge">.PDF</span><span class="badge">.JSON</span></div><input type="file" id="fileInput" multiple /></div></div>
-          <div class="grid grid-12"><div class="card col-4"><div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">Financial Ledger</div><div style="font-size:12px;color:#9aa5c0;">Q3_Revenue_Ledger.csv · 14,204 rows</div></div><div class="card col-4"><div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:#7ff3c4;">Passed · 0 errors</div><div style="font-size:12px;color:#9aa5c0;">Schema, nulls, and type checks complete</div></div><div class="card col-4"><div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">98.6%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;"><div style="width:98.6%;height:100%;background:#3E7BFA;"></div></div></div></div>
-          <div class="card"><div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — Q3_Revenue_Ledger.csv</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;"><th style="padding:10px 14px;">Date</th><th style="padding:10px 14px;">Region</th><th style="padding:10px 14px;">Product Line</th><th style="padding:10px 14px;">Revenue</th><th style="padding:10px 14px;">Units</th><th style="padding:10px 14px;">Margin</th></tr><tr><td style="padding:10px 14px;">2026-07-01</td><td style="padding:10px 14px;">North America</td><td style="padding:10px 14px;">Enterprise Suite</td><td style="padding:10px 14px;">$482,110</td><td style="padding:10px 14px;">1,204</td><td style="padding:10px 14px;">41.2%</td></tr><tr><td style="padding:10px 14px;">2026-07-01</td><td style="padding:10px 14px;">APAC</td><td style="padding:10px 14px;">Enterprise Suite</td><td style="padding:10px 14px;">$318,940</td><td style="padding:10px 14px;">902</td><td style="padding:10px 14px;">38.6%</td></tr><tr><td style="padding:10px 14px;">2026-07-02</td><td style="padding:10px 14px;">EMEA</td><td style="padding:10px 14px;">Analytics Add-on</td><td style="padding:10px 14px;">$146,220</td><td style="padding:10px 14px;">540</td><td style="padding:10px 14px;">52.4%</td></tr><tr><td style="padding:10px 14px;">2026-07-02</td><td style="padding:10px 14px;">North America</td><td style="padding:10px 14px;">Analytics Add-on</td><td style="padding:10px 14px;">$204,880</td><td style="padding:10px 14px;">710</td><td style="padding:10px 14px;">49.1%</td></tr></table></div></div>
+          <div id="datasetStatsGrid" style="display:none;" class="grid grid-12">
+            <div class="card col-4" id="detectedTypeCard"></div>
+            <div class="card col-4" id="validationStatusCard"></div>
+            <div class="card col-4" id="classificationConfCard"></div>
+          </div>
+          <div id="datasetPreviewCard" class="card" style="display:none;"></div>
+          <div id="datasetEmptyState" class="card" style="text-align:center;padding:40px;color:#9aa5c0;">
+            <div style="font-size:32px;margin-bottom:12px;">📂</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">No dataset uploaded yet</div>
+            <div style="font-size:13px;">Upload a CSV file above to see classification, validation and preview</div>
+          </div>
         </section>
-        <section class="view" id="view-knowledge" style="display:none;">
+        <section class="view" id="view-knowledge"<section class="view" id="view-knowledge" style="display:none;">
           <div class="page-head"><div><div class="eyebrow">RETRIEVAL AUGMENTED GENERATION</div><h1 class="page-title">Knowledge Base</h1><p class="page-sub">Semantic search across enterprise documents, with cited, verifiable answers.</p></div><button class="btn btn-ghost" style="color:#edf1fa;background:rgba(148,163,255,0.08);">+ Add source</button></div>
           <div class="grid grid-12"><div class="card col-4"><div style="font-size:16px;font-weight:700;margin-bottom:14px;">Enterprise Document Library</div><div style="display:grid;gap:10px;"><div class="card" style="padding:14px;">FY26 Vendor Contracts.pdf<div style="font-size:11px;color:#9aa5c0;margin-top:4px;">142 pages · indexed 2h ago</div></div><div class="card" style="padding:14px;">Board Strategy Memo Q3.pdf<div style="font-size:11px;color:#9aa5c0;margin-top:4px;">18 pages · indexed 1d ago</div></div></div></div><div class="card col-8" style="display:flex;flex-direction:column;">
             <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Ask Enterprise AI</div>
@@ -294,47 +303,77 @@
     document.getElementById('runPipelineBtn').addEventListener('click', ()=>{ pipelineRunning=false; runPipeline(); fetchPrediction(); });
     const dropzone=document.getElementById('dropzone'); const fileInput=document.getElementById('fileInput'); dropzone.addEventListener('click', ()=> fileInput.click()); ['dragenter','dragover'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.add('drag'); })); ['dragleave','drop'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.remove('drag'); })); fileInput.addEventListener('change', handleFiles);
     dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.classList.remove('drag'); if(e.dataTransfer.files.length){ const dt=e.dataTransfer; fileInput.files=dt.files; handleFiles(); } });
-    function classifyDataset(headers){ const h=headers.map(c=>c.toLowerCase()).join(','); if(h.includes('churn')||h.includes('subscription')||h.includes('tenure')) return {type:'CRM / Churn Dataset',confidence:97}; if(h.includes('leaveornot')||h.includes('joiningyear')||h.includes('education')) return {type:'HR / Employee Dataset',confidence:96}; if(h.includes('retail_sales')||h.includes('warehouse')||h.includes('supplier')) return {type:'Retail & Warehouse Sales',confidence:98}; if(h.includes('revenue')||h.includes('profit')||h.includes('margin')) return {type:'Financial Ledger',confidence:95}; if(h.includes('year')||h.includes('month')||h.includes('date')) return {type:'Time Series Dataset',confidence:91}; return {type:'General Dataset',confidence:85}; }
-    function handleFiles(){
-      const file=fileInput.files[0]; if(!file) return;
-      const dropText=dropzone.querySelector('div:nth-child(2)');
-      if(dropText) dropText.textContent='Classification Agent analyzing file…';
-      const reader=new FileReader();
-      reader.onload=function(e){
-        const lines=e.target.result.trim().split('\n').filter(l=>l.trim());
-        const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
-        const rowCount=lines.length-1;
-        const {type,confidence}=classifyDataset(headers);
-        let nullCount=0;
-        lines.slice(1,201).forEach(line=>line.split(',').forEach(cell=>{ if(!cell.trim()||cell.trim().toLowerCase()==='null'||cell.trim().toLowerCase()==='na') nullCount++; }));
-        const cards=document.querySelectorAll('#view-datasets .grid-12 .card');
-        if(cards[0]) cards[0].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">${type}</div><div style="font-size:12px;color:#9aa5c0;">${file.name} · ${rowCount.toLocaleString()} rows · ${headers.length} columns</div>`;
-        if(cards[1]){ const ok=nullCount===0; cards[1].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:${ok?'#7ff3c4':'#ffdd8a'};">${ok?'Passed · 0 errors':'Warning · '+nullCount+' nulls'}</div><div style="font-size:12px;color:#9aa5c0;">Columns: ${headers.slice(0,5).join(', ')}${headers.length>5?'…':''}</div>`; }
-        if(cards[2]) cards[2].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">${confidence}%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;margin-top:8px;"><div style="width:${confidence}%;height:100%;background:#3E7BFA;"></div></div>`;
-        const previewCard=document.querySelector('#view-datasets .card:last-child');
-        if(previewCard){ const hHtml=headers.map(h=>`<th style="padding:10px 14px;">${h}</th>`).join(''); const rHtml=lines.slice(1,6).map(line=>`<tr>${line.split(',').map(c=>`<td style="padding:10px 14px;">${c.trim().replace(/"/g,'')||'—'}</td>`).join('')}</tr>`).join(''); previewCard.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — ${file.name}</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;">${hHtml}</tr>${rHtml}</table></div>`; }
-        if(dropText) dropText.textContent='✅ '+file.name+' classified!';
-        setTimeout(()=>{ if(dropText) dropText.textContent='Drag & drop files, or click to browse'; },3000);
-      };
-      reader.readAsText(file);
-      // Also send to backend for server-side classification
-      const formData = new FormData();
-      formData.append('file', file);
-      fetch(`${BACKEND_URL}/upload`, {method:'POST', body:formData})
-        .then(r=>r.json()).then(data=>{
-          if(data.error) return;
-          const cards=document.querySelectorAll('#view-datasets .grid-12 .card');
-          if(cards[0]) cards[0].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">${data.detected_type}</div><div style="font-size:12px;color:#9aa5c0;">${data.filename} · ${data.rows.toLocaleString()} rows · ${data.columns} columns</div>`;
-          if(cards[1]){ const ok=data.null_count===0; cards[1].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:${ok?'#7ff3c4':'#ffdd8a'};">${ok?'Passed · 0 errors':'Warning · '+data.null_count+' nulls'}</div><div style="font-size:12px;color:#9aa5c0;">Columns: ${data.headers.slice(0,5).join(', ')}${data.headers.length>5?'…':''}</div>`; }
-          if(cards[2]){ cards[2].innerHTML=`<div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">${data.confidence}%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;margin-top:8px;"><div style="width:${data.confidence}%;height:100%;background:#3E7BFA;"></div></div>`; }
-          // Update preview table with backend data
-          const previewCard=document.querySelector('#view-datasets .card:last-child');
-          if(previewCard && data.preview && data.preview.length){
-            const hHtml=data.headers.map(h=>`<th style="padding:10px 14px;">${h}</th>`).join('');
-            const rHtml=data.preview.map(row=>`<tr>${data.headers.map(h=>`<td style="padding:10px 14px;">${row[h]||'—'}</td>`).join('')}</tr>`).join('');
-            previewCard.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — ${data.filename}</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;">${hHtml}</tr>${rHtml}</table></div>`;
+    function classifyDataset(headers){
+      const h=headers.map(c=>c.toLowerCase()).join(',');
+      if(h.includes('churn')||h.includes('subscription')||h.includes('tenure')) return {type:'CRM / Churn Dataset',confidence:97};
+      if(h.includes('leaveornot')||h.includes('joiningyear')||h.includes('education')) return {type:'HR / Employee Dataset',confidence:96};
+      if(h.includes('retail_sales')||h.includes('warehouse')||h.includes('supplier')) return {type:'Retail & Warehouse Sales',confidence:98};
+      if(h.includes('revenue')||h.includes('profit')||h.includes('margin')) return {type:'Financial Ledger',confidence:95};
+      if(h.includes('year')||h.includes('month')||h.includes('date')) return {type:'Time Series Dataset',confidence:91};
+      return {type:'General Dataset',confidence:85};
+    }
+    function showDatasetCards(filename, rows, cols, headers, nullCount, type, confidence, previewRows){
+      // hide empty state, show cards
+      var empty = document.getElementById('datasetEmptyState');
+      var grid = document.getElementById('datasetStatsGrid');
+      var preview = document.getElementById('datasetPreviewCard');
+      if(empty) empty.style.display='none';
+      if(grid) grid.style.display='grid';
+      if(preview) preview.style.display='block';
+
+      var typeCard = document.getElementById('detectedTypeCard');
+      if(typeCard) typeCard.innerHTML='<div class="eyebrow" style="margin-bottom:8px;">DETECTED TYPE</div><div style="font-size:17px;font-weight:700;">'+type+'</div><div style="font-size:12px;color:#9aa5c0;">'+filename+' · '+rows.toLocaleString()+' rows · '+cols+' columns</div>';
+
+      var valCard = document.getElementById('validationStatusCard');
+      if(valCard){ var ok=nullCount===0; valCard.innerHTML='<div class="eyebrow" style="margin-bottom:8px;">VALIDATION STATUS</div><div style="font-size:17px;font-weight:700;color:'+(ok?'#7ff3c4':'#ffdd8a')+';">'+(ok?'Passed · 0 errors':'Warning · '+nullCount+' nulls found')+'</div><div style="font-size:12px;color:#9aa5c0;">Columns: '+headers.slice(0,5).join(', ')+(headers.length>5?'…':'')+'</div>'; }
+
+      var confCard = document.getElementById('classificationConfCard');
+      if(confCard) confCard.innerHTML='<div class="eyebrow" style="margin-bottom:8px;">CLASSIFICATION CONFIDENCE</div><div style="font-size:17px;font-weight:700;color:#67e8f9;">'+confidence+'%</div><div style="height:8px;background:rgba(148,163,255,0.12);border-radius:999px;overflow:hidden;margin-top:8px;"><div style="width:'+confidence+'%;height:100%;background:#3E7BFA;"></div></div>';
+
+      if(preview){
+        var hHtml=headers.map(function(h){return '<th style="padding:10px 14px;">'+h+'</th>';}).join('');
+        var rHtml=previewRows.map(function(row){
+          if(typeof row==='object' && !Array.isArray(row)){
+            return '<tr>'+headers.map(function(h){return '<td style="padding:10px 14px;">'+(row[h]||'—')+'</td>';}).join('')+'</tr>';
           }
-        }).catch(()=>{}); // silently fallback to client-side parse already done
+          return '<tr>'+row.map(function(c){return '<td style="padding:10px 14px;">'+(c||'—')+'</td>';}).join('')+'</tr>';
+        }).join('');
+        preview.innerHTML='<div style="font-size:16px;font-weight:700;margin-bottom:14px;">Dataset Preview — '+filename+'</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="color:#9aa5c0;text-align:left;font-size:11px;">'+hHtml+'</tr>'+rHtml+'</table></div>';
+      }
+    }
+    function handleFiles(){
+      var file=fileInput.files[0]; if(!file) return;
+      var dropText=dropzone.querySelector('div:nth-child(2)');
+      if(dropText) dropText.textContent='Classification Agent analyzing file...';
+
+      // Try backend first
+      var formData=new FormData();
+      formData.append('file',file);
+      fetch(BACKEND_URL+'/upload',{method:'POST',body:formData})
+        .then(function(r){return r.json();})
+        .then(function(data){
+          if(data.error) throw new Error(data.error);
+          showDatasetCards(data.filename, data.rows, data.columns, data.headers, data.null_count, data.detected_type, data.confidence, data.preview);
+          if(dropText) dropText.textContent='File classified successfully!';
+          setTimeout(function(){if(dropText) dropText.textContent='Drag & drop files, or click to browse';},3000);
+        })
+        .catch(function(){
+          // fallback: parse client-side
+          var reader=new FileReader();
+          reader.onload=function(e){
+            var lines=e.target.result.trim().split('\n').filter(function(l){return l.trim();});
+            var headers=lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'');});
+            var rowCount=lines.length-1;
+            var result=classifyDataset(headers);
+            var nullCount=0;
+            lines.slice(1,201).forEach(function(line){line.split(',').forEach(function(cell){if(!cell.trim()||cell.trim().toLowerCase()==='null'||cell.trim().toLowerCase()==='na') nullCount++;});});
+            var previewRows=lines.slice(1,6).map(function(line){return line.split(',').map(function(c){return c.trim().replace(/"/g,'');});});
+            showDatasetCards(file.name, rowCount, headers.length, headers, nullCount, result.type, result.confidence, previewRows);
+            if(dropText) dropText.textContent='File classified successfully!';
+            setTimeout(function(){if(dropText) dropText.textContent='Drag & drop files, or click to browse';},3000);
+          };
+          reader.readAsText(file);
+        });
     }
     function askRag(){
       const input=document.getElementById('ragInput');
