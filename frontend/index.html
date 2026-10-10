@@ -754,10 +754,11 @@ function escapeHtml(value){
   return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 }
 
-function loadDatasets(){
+function loadDatasets(retryCount){
+  retryCount = retryCount || 0;
   const target = document.getElementById('datasetInventory');
   if(!target) return;
-  target.textContent = 'Loading datasets…';
+  target.textContent = retryCount > 0 ? `Waking backend (attempt ${retryCount+1})…` : 'Loading datasets…';
   fetch(`${BACKEND_URL}/datasets`).then(response => {
     if(!response.ok) throw new Error(`Backend returned ${response.status}`);
     return response.json();
@@ -767,13 +768,23 @@ function loadDatasets(){
     target.innerHTML = `<div style="display:grid;gap:8px;">${rows.map(item =>
       `<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:rgba(148,163,255,0.06);"><span>${escapeHtml(item.filename)}</span><span>${escapeHtml(item.source)} · ${item.size_kb ?? '—'} KB</span></div>`
     ).join('')}</div>`;
-  }).catch(error => { target.textContent = `Unable to load datasets: ${error.message}`; });
+  }).catch(error => {
+    if(retryCount < 2){
+      setTimeout(() => loadDatasets(retryCount + 1), 2500);
+    } else {
+      target.innerHTML = `<div style="display:flex;align-items:center;gap:12px;color:#fca5a5;">
+        <span>Unable to load datasets (${escapeHtml(error.message)}). Server may be waking up.</span>
+        <button onclick="loadDatasets(0)" style="background:rgba(62,123,250,0.25);border:1px solid #3E7BFA;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Retry</button>
+      </div>`;
+    }
+  });
 }
 
-function loadHistory(){
+function loadHistory(retryCount){
+  retryCount = retryCount || 0;
   const target = document.getElementById('historyContent');
   if(!target) return;
-  target.textContent = 'Loading history…';
+  target.textContent = retryCount > 0 ? `Waking backend (attempt ${retryCount+1})…` : 'Loading history…';
   fetch(`${BACKEND_URL}/history?limit=10`).then(response => {
     if(!response.ok) throw new Error(`Backend returned ${response.status}`);
     return response.json();
@@ -788,7 +799,16 @@ function loadHistory(){
     </div><div style="margin-top:14px;display:grid;gap:8px;">${predictions.length ? predictions.map(item =>
       `<div style="padding:10px 12px;border-radius:10px;background:rgba(148,163,255,0.06);">Prediction #${item.id} · accuracy ${item.forecast_accuracy ?? 'N/A'}% · risk ${escapeHtml(item.risk_level || 'N/A')} · ${escapeHtml(item.created_at || '')}</div>`
     ).join('') : '<div>No prediction history yet.</div>'}</div>`;
-  }).catch(error => { target.textContent = `Unable to load history: ${error.message}`; });
+  }).catch(error => {
+    if(retryCount < 2){
+      setTimeout(() => loadHistory(retryCount + 1), 2500);
+    } else {
+      target.innerHTML = `<div style="display:flex;align-items:center;gap:12px;color:#fca5a5;">
+        <span>Unable to load history (${escapeHtml(error.message)}). Server may be waking up.</span>
+        <button onclick="loadHistory(0)" style="background:rgba(62,123,250,0.25);border:1px solid #3E7BFA;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Retry</button>
+      </div>`;
+    }
+  });
 }
 
 function loadRecentUploads(){
