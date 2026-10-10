@@ -9,25 +9,41 @@ hain taaki dono independently run/deploy ho sakein.
 
 ```
 predictive-intelligence-engine/
-├── backend/            # FastAPI + SQLite — saara API aur database yahin hai
+├── backend/            # FastAPI + SQLite — core API, database, and real datasets
 │   ├── app/
-│   │   ├── agents/      # 5 Python agents (analysis, forecasting, scenario, rag, decision)
-│   │   ├── routes/      # Har API endpoint apni file mein
-│   │   ├── database.py  # SQLite connection setup
-│   │   ├── models.py    # Database tables (SQLAlchemy)
-│   │   ├── schemas.py   # API response shapes (Pydantic)
-│   │   └── main.py      # FastAPI app + route registration
+│   │   ├── agents/      # 5 Autonomous AI agents (analysis, forecast, scenario, rag, decision)
+│   │   ├── routes/      # Clean REST endpoints (/predict, /analysis, /scenario, /upload, etc.)
+│   │   ├── database.py  # SQLite connection & session management
+│   │   ├── models.py    # SQLAlchemy database schema
+│   │   ├── schemas.py   # Pydantic data validation
+│   │   └── main.py      # FastAPI application & static mount
 │   ├── data/
-│   │   ├── cleaned/     # Original real datasets (CSV)
-│   │   ├── uploaded/    # Jo CSV upload hongi wo yahan save hoti hain
-│   │   └── knowledge/   # RAG knowledge base (markdown notes, real data se)
-│   ├── requirements.txt
-│   └── run.py           # `python run.py` se server start
+│   │   ├── cleaned/     # Pre-processed real-world CSV datasets
+│   │   ├── uploaded/    # User CSV uploads directory
+│   │   └── knowledge/   # Domain markdown knowledge base for ChromaDB RAG
+│   ├── requirements.txt # Backend dependencies
+│   └── run.py           # Backend convenience launcher
 │
-└── frontend/            # Plain HTML/CSS/JS — koi build step nahi chahiye
-    ├── index.html
-    ├── css/              # variables.css, layout.css, components.css
-    └── js/               # config, api, nav, charts + har page ki alag file
+├── frontend/           # Modern SPA web interface (HTML5, Vanilla CSS, JS, Chart.js)
+│   ├── index.html       # Single Page Application
+│   ├── css/             # Design system tokens and styles
+│   ├── js/              # Dynamic charts, API connectors, simulation controllers
+│   └── assets/          # Icons and branding
+│
+├── docs/               # Detailed documentation, guides, and presentation notes
+│   ├── PRESENTATION_GUIDE.md  # Minor project presentation & viva prep
+│   ├── API_DOCS.md            # Complete API documentation
+│   ├── PROJECT_STRUCTURE.md   # System architecture
+│   └── TESTING.md             # Quality assurance guide
+│
+├── tests/              # Automated test suites
+│   ├── test_gemini_integration.py
+│   └── test_realtime_system.py
+│
+├── Dockerfile          # Production Docker configuration
+├── render.yaml         # 1-Click Render.com deployment blueprint
+├── requirements.txt    # Universal root dependencies
+└── main.py             # Root application entrypoint (python main.py)
 ```
 
 ## Kya real hai is project mein (fake mock-data nahi)
