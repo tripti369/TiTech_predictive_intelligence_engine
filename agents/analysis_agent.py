@@ -110,7 +110,7 @@ class AnalysisAgent:
         if numeric_df.empty:
             return {}
 
-        descriptive_stats = numeric_df.describe().to_dict()
+        descriptive_stats = numeric_df.describe().fillna(0.0).to_dict()
 
         return descriptive_stats
     def calculate_correlation(self, df: pd.DataFrame) -> dict:
@@ -133,7 +133,7 @@ class AnalysisAgent:
         if numeric_df.shape[1] < 2:
             return {}
 
-        correlation_matrix = numeric_df.corr()
+        correlation_matrix = numeric_df.corr().fillna(0.0)
 
         return correlation_matrix.to_dict()
     def detect_outliers(self, df: pd.DataFrame) -> dict:

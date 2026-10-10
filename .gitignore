@@ -1,10 +1,34 @@
+# Python
 __pycache__/
 *.pyc
-*.pyo
-.env
-.cache/
-*.egg-info/
-.pytest_cache/
 venv/
-env/
-node_modules/
+.venv/
+*.egg-info/
+
+# Database
+backend/data/app.db
+backend/data/rag_index_cache.json
+
+# ChromaDB vector store (rebuilt on startup)
+backend/data/chroma/
+
+# Uploaded user files (keep the folder, ignore its contents)
+backend/data/uploaded/*
+!backend/data/uploaded/.gitkeep
+
+# Realtime streamed data
+backend/data/realtime/*
+!backend/data/realtime/.gitkeep
+
+# Env files
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+
+# Netlify
+.netlify/

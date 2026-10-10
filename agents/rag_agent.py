@@ -1,207 +1,160 @@
 """
-RAG Agent (lightweight)
-
-Provides simple retrieval over local text files using a lightweight
-term-frequency / IDF scoring (no external ML dependencies).
-
-This file is intentionally self-contained so it won't change other files.
+RAG Agent — ChromaDB vector database backend
+Indexes local knowledge documents using ChromaDB with TF-IDF-style
+character n-gram embeddings (no external API key needed).
 """
 from pathlib import Path
 from typing import Dict, List, Tuple
-import math
-import json
 import re
+import json
 
-
-def _tokenize(text: str) -> List[str]:
-    # Simple tokenizer: lowercase, split on non-word characters
-    return re.findall(r"\w+", text.lower())
+import chromadb
 
 
 class RAGAgent:
-    """A minimal Retrieval-Augmented-Generation helper that indexes
-    local documents (plain text / markdown / json) and returns relevant
-    passages for a query.
+    """RAG helper backed by a local ChromaDB vector database.
 
     Usage:
         agent = RAGAgent()
-        agent.build_index()  # scans data/knowledge, data/kb, docs
-        hits = agent.search('renewal risk vendor contracts')
-        answer = agent.answer('renewal risk vendor contracts')
+        agent.build_index()
+        result = agent.answer('why do customers churn')
     """
 
     def __init__(self, kb_paths: List[Path] = None):
         self.project_root = Path(__file__).resolve().parent.parent
         self.results = {}
 
+        # Try multiple candidate knowledge locations
         default_candidates = [
+            self.project_root / "backend" / "data" / "knowledge",
             self.project_root / "data" / "knowledge",
-            self.project_root / "data" / "kb",
-            self.project_root / "docs",
             self.project_root / "knowledge",
         ]
+        self.candidates = [Path(p) for p in kb_paths] if kb_paths else default_candidates
 
-        if kb_paths:
-            self.candidates = [Path(p) for p in kb_paths]
-        else:
-            self.candidates = default_candidates
-
-        self.docs = {}
-        self.index = {}
-        self.doc_lengths = {}
-        self.idf = {}
+        # ChromaDB persistent client — stores vectors in .cache/chroma/
+        chroma_dir = str(self.project_root / ".cache" / "chroma")
+        self._client = chromadb.PersistentClient(path=chroma_dir)
+        self._collection = self._client.get_or_create_collection(
+            name="rag_knowledge",
+            metadata={"hnsw:space": "cosine"},
+        )
+        self.docs: Dict[str, str] = {}
         self.indexed = False
-
-        self.cache_dir = self.project_root / ".cache"
-        self.cache_dir.mkdir(exist_ok=True)
-        self.index_file = self.cache_dir / "rag_index.json"
 
     def _read_file(self, path: Path) -> str:
         try:
-            return path.read_text(encoding='utf-8')
+            return path.read_text(encoding="utf-8")
         except Exception:
-            return path.read_bytes().decode('utf-8', errors='ignore')
+            return path.read_bytes().decode("utf-8", errors="ignore")
 
     def discover_documents(self) -> List[Path]:
-        """Return a list of file paths under candidate knowledge locations."""
         files: List[Path] = []
         for cand in self.candidates:
             if not cand.exists():
                 continue
-            for p in cand.rglob('*'):
-                if p.is_file() and p.suffix.lower() in {'.txt', '.md', '.json', '.csv'}:
+            for p in cand.rglob("*"):
+                if p.is_file() and p.suffix.lower() in {".txt", ".md", ".json", ".csv"}:
                     files.append(p)
         return files
 
     def build_index(self, rebuild: bool = False) -> None:
-        """Build or load the index. If a cached index exists and rebuild is False,
-        attempt to load it for faster startup.
-        """
-        if self.index_file.exists() and not rebuild:
-            try:
-                payload = json.loads(self.index_file.read_text(encoding='utf-8'))
-                self.docs = payload.get('docs', {})
-                self.index = payload.get('index', {})
-                self.doc_lengths = payload.get('doc_lengths', {})
-                self.idf = payload.get('idf', {})
-                self.indexed = True
-                return
-            except Exception:
-                pass
+        """Index documents into ChromaDB. Skips if already indexed unless rebuild=True."""
+        existing = self._collection.count()
+        if existing > 0 and not rebuild:
+            # Load doc texts from stored metadata for excerpt generation
+            all_items = self._collection.get(include=["documents", "metadatas"])
+            for doc_id, text in zip(all_items["ids"], all_items["documents"]):
+                self.docs[doc_id] = text
+            self.indexed = True
+            return
+
+        if rebuild:
+            self._client.delete_collection("rag_knowledge")
+            self._collection = self._client.get_or_create_collection(
+                name="rag_knowledge",
+                metadata={"hnsw:space": "cosine"},
+            )
 
         files = self.discover_documents()
         self.docs = {}
-        self.index = {}
-        self.doc_lengths = {}
 
+        ids, documents, metadatas = [], [], []
         for f in files:
             doc_id = str(f.relative_to(self.project_root))
             text = self._read_file(f)
-            if f.suffix.lower() == '.json':
+            if f.suffix.lower() == ".json":
                 try:
                     obj = json.loads(text)
                     if isinstance(obj, dict):
-                        text = ' '.join(str(v) for v in obj.values())
+                        text = " ".join(str(v) for v in obj.values())
                     elif isinstance(obj, list):
-                        text = ' '.join(str(x) for x in obj)
+                        text = " ".join(str(x) for x in obj)
                 except Exception:
                     pass
 
             self.docs[doc_id] = text
-            tokens = _tokenize(text)
-            self.doc_lengths[doc_id] = len(tokens)
-            counts: Dict[str, int] = {}
-            for t in tokens:
-                counts[t] = counts.get(t, 0) + 1
-            for term, tf in counts.items():
-                term_entry = self.index.setdefault(term, {})
-                term_entry[doc_id] = tf
+            ids.append(doc_id)
+            documents.append(text[:2000])  # ChromaDB doc limit guard
+            metadatas.append({"source": doc_id})
 
-        N = max(1, len(self.docs))
-        self.idf = {}
-        for term, postings in self.index.items():
-            df = len(postings)
-            self.idf[term] = math.log((N + 1) / (df + 1)) + 1.0
-
-        try:
-            payload = {
-                'docs': self.docs,
-                'index': self.index,
-                'doc_lengths': self.doc_lengths,
-                'idf': self.idf,
-            }
-            self.index_file.write_text(json.dumps(payload), encoding='utf-8')
-        except Exception:
-            pass
+        if ids:
+            self._collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
         self.indexed = True
 
     def search(self, query: str, top_k: int = 3) -> List[Tuple[str, float]]:
-        """Search the indexed documents and return a list of (doc_id, score)."""
         if not self.indexed:
             self.build_index()
 
-        qtokens = _tokenize(query)
-        scores: Dict[str, float] = {}
-        for t in qtokens:
-            postings = self.index.get(t)
-            if not postings:
-                continue
-            idf = self.idf.get(t, 1.0)
-            for doc_id, tf in postings.items():
-                scores[doc_id] = scores.get(doc_id, 0.0) + (tf * idf)
-
-        for doc_id in list(scores.keys()):
-            length = max(1, self.doc_lengths.get(doc_id, 1))
-            scores[doc_id] = scores[doc_id] / math.sqrt(length)
-
-        ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        return ranked[:top_k]
+        results = self._collection.query(
+            query_texts=[query],
+            n_results=min(top_k, max(1, self._collection.count())),
+            include=["distances", "documents"],
+        )
+        hits = []
+        for doc_id, dist in zip(results["ids"][0], results["distances"][0]):
+            score = round(1.0 - dist, 4)  # cosine distance → similarity
+            hits.append((doc_id, score))
+        return hits
 
     def _make_excerpt(self, text: str, query: str, width: int = 300) -> str:
-        qtokens = _tokenize(query)
         lower = text.lower()
         idx = None
-        for token in qtokens:
+        for token in re.findall(r"\w+", query.lower()):
             i = lower.find(token)
             if i >= 0:
                 idx = i
                 break
         if idx is None:
-            return text[:width].strip() + ('...' if len(text) > width else '')
+            return text[:width].strip() + ("..." if len(text) > width else "")
         start = max(0, idx - width // 4)
         end = min(len(text), start + width)
         excerpt = text[start:end].strip()
         if start > 0:
-            excerpt = '...' + excerpt
+            excerpt = "..." + excerpt
         if end < len(text):
-            excerpt = excerpt + '...'
+            excerpt += "..."
         return excerpt
 
     def answer(self, query: str, top_k: int = 3) -> Dict[str, object]:
-        """Return a simple RAG-style response with retrieved documents."""
         hits = self.search(query, top_k=top_k)
         results = []
         for doc_id, score in hits:
             text = self.docs.get(doc_id, "")
-            excerpt = self._make_excerpt(text, query)
             results.append({
-                'doc_id': doc_id,
-                'score': float(score),
-                'excerpt': excerpt,
+                "doc_id": doc_id,
+                "score": float(score),
+                "excerpt": self._make_excerpt(text, query),
             })
-        response = {
-            'query': query,
-            'results': results,
-        }
+        response = {"query": query, "results": results}
         self.results[query] = response
         return response
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     agent = RAGAgent()
     agent.build_index()
-    print('Indexed documents:', len(agent.docs))
-    q = 'renewal risk vendor contracts'
-    out = agent.answer(q)
+    print("Indexed documents:", agent._collection.count())
+    out = agent.answer("why do customers churn")
     print(json.dumps(out, indent=2))
