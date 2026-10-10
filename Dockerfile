@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the canonical backend application and its real datasets
+# Copy the canonical backend application and real datasets
 COPY backend /app/backend
 
 # Copy frontend so FastAPI can serve it at /
@@ -20,5 +20,4 @@ WORKDIR /app/backend
 
 ENV PORT=8000
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120"]
-
+CMD ["sh", "-c", "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120"]

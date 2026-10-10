@@ -24,6 +24,12 @@ from agents.scenario_agent import ScenarioAgent
 from agents.rag_agent import RAGAgent
 from agents.decision_agent import DecisionAgent
 
+# Expose FastAPI app instance for web runners (e.g. uvicorn main:app)
+try:
+    from app import app
+except Exception:
+    app = None
+
 def main():
     """Main execution function."""
 

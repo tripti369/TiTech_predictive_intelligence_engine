@@ -17,7 +17,7 @@ from pathlib import Path
 
 try:
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
-except ImportError:  # statsmodels missing -> fallback-only mode
+except (ImportError, Exception):  # statsmodels missing or blocked -> fallback-only mode
     ExponentialSmoothing = None
 
 

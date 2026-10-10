@@ -119,14 +119,22 @@ if _FRONTEND_DIR.is_dir():
     @app.get("/")
     def root(request: Request):
         accept = request.headers.get("accept", "")
-        # If requested by a web browser, serve the interactive web interface
-        if "text/html" in accept:
-            index_path = _FRONTEND_DIR / "index.html"
-            if index_path.exists():
-                return FileResponse(str(index_path))
-        # Otherwise (curl, test runner, api clients), return JSON health response
+        # If API client explicitly requests JSON without text/html, return JSON health
+        if "application/json" in accept and "text/html" not in accept:
+            return JSONResponse(content=_get_health_data())
+        index_path = _FRONTEND_DIR / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        return JSONResponse(content=_get_health_data())
+
+    @app.get("/index.html")
+    def serve_index_html():
+        index_path = _FRONTEND_DIR / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
         return JSONResponse(content=_get_health_data())
 else:
     @app.get("/")
     def root():
         return _get_health_data()
+

@@ -77,13 +77,29 @@ python -m http.server 5500
 
 Phir browser mein `http://127.0.0.1:5500` kholo.
 
-### 3. Dono alag machine/host par deploy karna ho to
+### 3. Ek-Click Live Deployment (Render / Docker)
 
-`frontend/index.html` ke `<head>` mein yeh line change kar do:
+Is repo mein **single-service deployment** configured hai — backend hi frontend ko serve karta hai!
 
-```html
-<meta name="backend-url" content="https://your-backend-domain.com" />
+#### A. Render.com par Deploy (Recommended - Free):
+1. **[dashboard.render.com](https://dashboard.render.com)** par jao aur GitHub se sign in karo.
+2. **New +** -> **Web Service** choose karo.
+3. Apna repository select karo: `tripti369/TiTech_predictive_intelligence_engine`
+4. Settings fill karo:
+   - **Branch**: `main`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r backend/requirements.txt`
+   - **Start Command**: `cd backend && gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120`
+5. Environment Variables mein add karo (optional):
+   - `GEMINI_API_KEY`: *(Apni Google Gemini API key)*
+6. Click **Deploy Web Service** — 2-3 minute mein live link mil jayega!
+
+#### B. Docker se Deploy:
+```bash
+docker build -t predictive-intelligence .
+docker run -p 8000:8000 predictive-intelligence
 ```
+Browser mein `http://localhost:8000` kholo!
 
 ---
 
