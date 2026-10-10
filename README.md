@@ -1,5 +1,7 @@
 # Predictive Intelligence Engine
 
+deployed link - https://titech-predictive-intelligence-engine-2.onrender.com
+
 Ek full-stack Business Intelligence project — real CSV data par forecasting,
 churn/attrition analysis, Monte Carlo scenario simulation aur ek RAG-based
 knowledge search karta hai. Backend aur Frontend do bilkul alag folders mein
