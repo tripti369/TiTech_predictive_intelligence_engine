@@ -320,7 +320,7 @@
     draw(); }
     function buildTimeline(){ const el=document.getElementById('pipelineTimeline'); el.innerHTML=PIPELINE_STEPS.map((label,i)=>`<div class="timeline-step"><div class="timeline-line"></div><div class="timeline-node">${i+1}</div><div style="font-size:11px;color:#9aa5c0;margin-top:8px;">${label}</div></div>`).join(''); }
     let pipelineRunning=false; function runPipeline(){ if(pipelineRunning) return; pipelineRunning=true; const steps=document.querySelectorAll('#pipelineTimeline .timeline-step'); const log=document.getElementById('workspaceLog'); log.innerHTML=''; steps.forEach(s=>s.classList.remove('done','active')); const agentForStep=[AGENTS[1],AGENTS[1],AGENTS[2],AGENTS[4],AGENTS[3],AGENTS[5],AGENTS[6],AGENTS[7],AGENTS[8]]; PIPELINE_STEPS.forEach((label,i)=>{ setTimeout(()=>{ if(i>0) steps[i-1].classList.add('done'); steps[i].classList.add('active'); const agent=agentForStep[i]||AGENTS[0]; const entry=document.createElement('div'); entry.className='card'; entry.style.padding='12px 14px'; entry.innerHTML=`<div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span class="badge info">${label}</span><span style="color:#9aa5c0;">${agent.name} · ${agent.task}</span><span style="margin-left:auto;color:#9aa5c0;font-family:'JetBrains Mono',monospace;">${new Date().toLocaleTimeString()}</span></div>`; log.prepend(entry); if(i===PIPELINE_STEPS.length-1){ steps[i].classList.add('done'); pipelineRunning=false; } }, i*640); }); }
-    document.getElementById('runPipelineBtn').addEventListener('click', ()=>{ pipelineRunning=false; runPipeline(); fetchPrediction(); });
+    document.getElementById('runPipelineBtn').addEventListener('click', ()=>{ pipelineRunning=false; runPipeline(); fetchPrediction(true); });
     const dropzone=document.getElementById('dropzone'); const fileInput=document.getElementById('fileInput'); dropzone.addEventListener('click', ()=> fileInput.click()); ['dragenter','dragover'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.add('drag'); })); ['dragleave','drop'].forEach(evt=>dropzone.addEventListener(evt,e=>{ e.preventDefault(); dropzone.classList.remove('drag'); })); fileInput.addEventListener('change', handleFiles);
     dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.classList.remove('drag'); if(e.dataTransfer.files.length){ const dt=e.dataTransfer; fileInput.files=dt.files; handleFiles(); } });
     function classifyDataset(headers){
@@ -542,30 +542,52 @@
   </script>
   <script>
 
-async function fetchPrediction(){
-  if(window._predictionStarted) return window._liveData || null;
+async function fetchPrediction(force){
+  if(window._liveData && !force) return window._liveData;
+  if(window._predictionRunning) return;
+  window._predictionRunning = true;
+  if(force){ window._predictionStarted = false; }
+  else if(window._predictionStarted){ window._predictionRunning = false; return window._liveData || null; }
   window._predictionStarted = true;
+
   const statusEl = document.getElementById('backendResultContent');
-  if(statusEl) statusEl.textContent = 'Calling live backend...';
+  if(statusEl){
+    statusEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:#94a3ff;padding:8px 0;">
+      <span style="font-size:16px;">⏳</span>
+      <span>Connecting to live pipeline & backend agents...</span>
+    </div>`;
+  }
   try {
     const response = await fetch(`${BACKEND_URL}/predict`);
     if(!response.ok) throw new Error(`Backend returned ${response.status}`);
     const data = await response.json();
-    if(statusEl) statusEl.innerHTML = `<div>Last run: <b>${new Date().toLocaleTimeString()}</b></div>
-      <div style="margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Forecast Accuracy<br><b style="color:#7ff3c4;">${data.forecast_accuracy}%</b></div>
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Churn Rate<br><b style="color:#ffb3b0;">${data.churn_rate}%</b></div>
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Attrition Rate<br><b style="color:#ffdd8a;">${data.attrition_rate}%</b></div>
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Avg Spend<br><b style="color:#bcd4ff;">$${data.avg_spend}</b></div>
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Avg Tenure<br><b style="color:#bcd4ff;">${data.avg_tenure} months</b></div>
-        <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Growth Rate<br><b style="color:#7ff3c4;">${data.growth_rate}%</b></div>
-      </div>`;
+    window._liveData = data;
+    if(statusEl){
+      statusEl.innerHTML = `<div>Last run: <b>${new Date().toLocaleTimeString()}</b></div>
+        <div style="margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Forecast Accuracy<br><b style="color:#7ff3c4;">${data.forecast_accuracy}%</b></div>
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Churn Rate<br><b style="color:#ffb3b0;">${data.churn_rate}%</b></div>
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Attrition Rate<br><b style="color:#ffdd8a;">${data.attrition_rate}%</b></div>
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Avg Spend<br><b style="color:#bcd4ff;">$${data.avg_spend}</b></div>
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Avg Tenure<br><b style="color:#bcd4ff;">${data.avg_tenure} months</b></div>
+          <div style="padding:10px;border-radius:12px;background:rgba(62,123,250,0.1);">Growth Rate<br><b style="color:#7ff3c4;">${data.growth_rate}%</b></div>
+        </div>`;
+    }
     updateUiWithPrediction(data);
     return data;
   } catch (error) {
     console.error('Prediction fetch error:', error);
-    if(statusEl) statusEl.innerHTML = `<span style="color:#ffb3b0;">⚠ Unable to reach backend at <b>${BACKEND_URL}</b>. Make sure FastAPI is running.</span>`;
+    window._predictionStarted = false; // Allow retrying on next attempt
+    if(statusEl){
+      statusEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);">
+          <div style="color:#fca5a5;font-size:13px;">⚠ Live pipeline timed out or backend is warming up (${escapeHtml(error.message)}).</div>
+          <button onclick="fetchPrediction(true)" style="align-self:flex-start;background:rgba(62,123,250,0.3);border:1px solid #3E7BFA;color:#fff;padding:6px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;">⚡ Retry Pipeline</button>
+        </div>`;
+    }
     return null;
+  } finally {
+    window._predictionRunning = false;
   }
 }
 

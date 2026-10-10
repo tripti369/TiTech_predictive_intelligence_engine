@@ -84,12 +84,20 @@ def _build_timeseries(df: pd.DataFrame, filename: str, target_col: str = None):
     return series, labels, num.name or "value"
 
 
+_DEFAULT_PREDICT_CACHE = None
+
+
 def _execute_predict(
     dataset: str = None,
     target_column: str = None,
     forecast_periods: int = 6,
     db: Session = None,
 ):
+    global _DEFAULT_PREDICT_CACHE
+    is_default = (not dataset and not target_column and (forecast_periods in (None, 6)))
+    if is_default and _DEFAULT_PREDICT_CACHE is not None:
+        return _DEFAULT_PREDICT_CACHE
+
     if dataset:
         try:
             df_main = load_csv(dataset)
@@ -270,6 +278,11 @@ def _execute_predict(
         "rag": rag_result,
         "decision": decision,
     }
+
+    if is_default:
+        _DEFAULT_PREDICT_CACHE = result
+
+    return result
 
 
 @router.get("/predict")
