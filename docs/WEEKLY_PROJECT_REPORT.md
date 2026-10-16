@@ -1,5 +1,5 @@
 # 📋 9-Week Comprehensive Project Progress & Contribution Report
-## Project Title: TiTech Predictive Intelligence Engine (PIE)
+## Project Title: Predictive Intelligence Engine (PIE)
 **Academic Level**: Minor Project / Capstone Evaluation  
 **Architecture**: Autonomous Multi-Agent Predictive System with RAG & Real-Time Analytics  
 
@@ -291,7 +291,7 @@ W7: System Optimization & Cache ──► W8: End-to-End Testing & QA  ──►
 
 #### 🔹 Person 4 (Integration & DevOps):
 - Deployed live production service to Render.com:  
-  🌐 **Live URL**: `https://titech-predictive-intelligence-engine-2.onrender.com`
+  🌐 **Live URL**: `https://predictive-intelligence-engine-2.onrender.com`
 - Consolidated GitHub repository into **exactly one branch (`main`)**, deleted deprecated remote branches (`clean-backend`, `backend-deploy`), and eliminated duplicate root files.
 - Authored comprehensive project presentation documentation in `docs/PRESENTATION_GUIDE.md` with complete question-and-answer preparation for external examiners.
 

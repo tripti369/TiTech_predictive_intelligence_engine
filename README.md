@@ -1,6 +1,6 @@
 # Predictive Intelligence Engine
 
-deployed link - https://titech-predictive-intelligence-engine-2.onrender.com
+deployed link - https://predictive-intelligence-engine-2.onrender.com
 
 Ek full-stack Business Intelligence project — real CSV data par forecasting,
 churn/attrition analysis, Monte Carlo scenario simulation aur ek RAG-based
@@ -102,7 +102,7 @@ Is repo mein **single-service deployment** configured hai — backend hi fronten
 #### A. Render.com par Deploy (Recommended - Free):
 1. **[dashboard.render.com](https://dashboard.render.com)** par jao aur GitHub se sign in karo.
 2. **New +** -> **Web Service** choose karo.
-3. Apna repository select karo: `tripti369/TiTech_predictive_intelligence_engine`
+3. Apna repository select karo: `tripti369/predictive-intelligence-engine`
 4. Settings fill karo:
    - **Branch**: `main`
    - **Runtime**: `Python 3`

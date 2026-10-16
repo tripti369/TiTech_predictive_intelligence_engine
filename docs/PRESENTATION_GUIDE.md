@@ -1,4 +1,4 @@
-# TiTech Predictive Intelligence Engine
+# Predictive Intelligence Engine
 ## Multi-Agent Architecture, System Integration & Presentation Guide
 
 ---
@@ -68,7 +68,7 @@ The frontend is a single-page enterprise dashboard built with vanilla JavaScript
 Use this outline for your presentation:
 
 ### Slide 1: Title & Introduction
-- **Title**: TiTech Predictive Intelligence Engine: Autonomous Multi-Agent Decision Platform
+- **Title**: Predictive Intelligence Engine: Autonomous Multi-Agent Decision Platform
 - **Presenter**: [Your Name / Team]
 - **Key Message**: Transforming reactive enterprise reporting into predictive, risk-aware autonomous intelligence.
 
