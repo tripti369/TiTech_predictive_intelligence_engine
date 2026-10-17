@@ -72,4 +72,32 @@ const API = {
     }
     return res.json();
   },
+
+  getCleanedDownloadUrl(filename, format = "csv") {
+    const backendBase = (typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "").replace(/\/api\/?$/, "");
+    return `${backendBase}/api/download-cleaned?filename=${encodeURIComponent(filename)}&format=${format}`;
+  },
+
+  async downloadCleaned(filename, format = "csv") {
+    const url = this.getCleanedDownloadUrl(filename, format);
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Download failed (${res.status})`);
+    }
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    const ext = format === "json" ? ".json" : ".csv";
+    const outName = filename.endsWith(".csv") ? (format === "json" ? filename.replace(/\.csv$/, ".json") : filename) : `${filename}${ext}`;
+    a.download = outName.startsWith("cleaned_") ? outName : `cleaned_${outName}`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
+    return true;
+  },
 };
+

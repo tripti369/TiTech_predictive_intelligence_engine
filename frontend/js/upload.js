@@ -59,6 +59,10 @@ async function handleUpload(file) {
 }
 
 function renderUploadResult(result) {
+  if (typeof showDatasetCards === "function") {
+    showDatasetCards(result);
+    return;
+  }
   const resultCard = document.getElementById("uploadResultCard");
   if (!resultCard) return;
   resultCard.style.display = "block";
@@ -72,6 +76,16 @@ function renderUploadResult(result) {
 
   const confBar = document.getElementById("uploadConfidenceBar");
   if (confBar) confBar.style.width = `${result.confidence}%`;
+
+  const downloadBtn = document.getElementById("uploadDownloadCleanedBtn");
+  if (downloadBtn && result.cleaned_filename) {
+    downloadBtn.style.display = "inline-flex";
+    downloadBtn.onclick = () => {
+      if (typeof API !== "undefined" && API.downloadCleaned) {
+        API.downloadCleaned(result.cleaned_filename);
+      }
+    };
+  }
 
   const theadRow = document.getElementById("uploadPreviewHead");
   const tbody = document.getElementById("uploadPreviewBody");

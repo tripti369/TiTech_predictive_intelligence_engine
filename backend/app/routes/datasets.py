@@ -5,14 +5,13 @@ Lists every dataset currently available to the engine — the ones shipped
 under data/cleaned/ plus anything a user has uploaded via /api/upload.
 """
 
+from pathlib import Path
 from fastapi import APIRouter
 
 from app.utils import DATA_DIR, REALTIME_DIR, UPLOAD_DIR
 
 router = APIRouter()
 
-
-from pathlib import Path
 
 def _count_rows(path: Path) -> int:
     try:
@@ -23,7 +22,7 @@ def _count_rows(path: Path) -> int:
         return 0
 
 
-def _describe(directory, source: str):
+def _describe(directory: Path, source: str):
     items = []
     if not directory.exists():
         return items
@@ -33,6 +32,18 @@ def _describe(directory, source: str):
         except OSError:
             size_kb = None
         rows = _count_rows(path)
+
+        # Determine clean status and corresponding cleaned filename
+        is_raw = path.name.startswith("raw_")
+        is_cleaned = ("cleaned" in path.name.lower() or source == "built-in") and not is_raw
+        
+        if is_cleaned:
+            clean_filename = path.name
+        elif is_raw:
+            clean_filename = f"cleaned_{path.name[4:]}"
+        else:
+            clean_filename = f"cleaned_{path.name}"
+
         items.append({
             "name": path.name,
             "filename": path.name,
@@ -40,6 +51,10 @@ def _describe(directory, source: str):
             "type": source,
             "size_kb": size_kb,
             "rows": rows,
+            "is_cleaned": is_cleaned,
+            "clean_filename": clean_filename,
+            "download_url": f"/api/download-cleaned?filename={clean_filename}",
+            "download_json_url": f"/api/download-cleaned?filename={clean_filename}&format=json",
         })
     return items
 
